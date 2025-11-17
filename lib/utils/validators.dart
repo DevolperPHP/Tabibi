@@ -170,4 +170,23 @@ class Validators {
     }
     return null;
   }
+
+  // 15. التحقق من العمر (رقم مكون من رقمين فقط)
+  static String? age(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'العمر مطلوب';
+    }
+    final ageRegex = RegExp(r'^\d{1,2}$'); // رقم أو رقمين فقط
+    if (!ageRegex.hasMatch(value.trim())) {
+      return 'يجب أن يكون العمر رقمًا مكونًا من رقمين فقط';
+    }
+    final ageValue = int.tryParse(value.trim());
+    if (ageValue == null) {
+      return 'يرجى إدخال عمر صحيح';
+    }
+    if (ageValue < 18 || ageValue > 99) {
+      return 'يجب أن يكون العمر بين 18 و 99 سنة';
+    }
+    return null;
+  }
 }

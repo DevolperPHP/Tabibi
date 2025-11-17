@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
@@ -160,10 +161,14 @@ class _ModernRegisterState extends State<ModernRegister> {
                         label: 'العمر',
                         hintText: 'أدخل عمرك',
                         controller: _authController.age,
-                        validator: (value) =>
-                            Validators.notEmpty(value, 'العمر'),
+                        validator: Validators.age,
                         isNumber: true,
                         prefixIcon: Icons.cake_outlined,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(2),
+                        ],
                       ),
 
                       SizedBox(height: ModernTheme.spaceMD),
