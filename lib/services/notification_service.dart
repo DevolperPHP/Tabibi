@@ -118,6 +118,10 @@ class NotificationService {
   static String get caseAcceptedType => 'case_accepted';
   static String get caseRejectedType => 'case_rejected';
   static String get caseTakenType => 'case_taken';
-  static String get teethHealthTipType => 'teeth_health_tip';
+  static String get caseCompletedType => 'case_completed';
+  static String get doctorRoleAcceptedType => 'doctor_role_accepted';
+  static String get doctorRoleRejectedType => 'doctor_role_rejected';
+  static String get healthTipType => 'health_tip';
+  static String get dailyHealthTipType => 'daily_health_tip';
   static String get appointmentReminderType => 'appointment_reminder';
 }

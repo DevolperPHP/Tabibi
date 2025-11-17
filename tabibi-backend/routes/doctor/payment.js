@@ -46,8 +46,8 @@ router.post("/callback", async (req, res) => {
       if (caseData) {
         await Notification.create({
           userId: caseData.userId,
-          title: 'تم أخذ حالتك من قبل طبيب',
-          body: `قام الدكتور ${doctor?.name || "Unknown"} بأخذ حالتك للعلاج`,
+          title: '📍 تم حجز موعدك مع طبيب بنجاح',
+          body: 'نتطلع لرؤيتك قريبًا، ونتمنى لك تجربة علاجية سهلة و مريحة 😁🦷',
           type: 'case_taken',
           relatedId: caseId,
         });

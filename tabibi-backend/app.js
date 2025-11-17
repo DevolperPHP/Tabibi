@@ -1,3 +1,6 @@
+// Buffer polyfill for Node.js v25 compatibility
+global.Buffer = global.Buffer || require('buffer').Buffer;
+
 const express = require("express");
 const app = express();
 const cors = require("cors");
@@ -19,7 +22,7 @@ const healthTips = require('./routes/admin/health-tips')
 require("dotenv").config({ path: "./key.env" });
 const paymentRoutes = require("./routes/doctor/payment");
 
-let PORT = 80;
+let PORT = 3000;
 
 app.use(cors());
 

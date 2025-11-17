@@ -1,6 +1,8 @@
 import 'package:get_secure_storage/get_secure_storage.dart';
 import '../data/models/profile_model.dart';
 import '../utils/constants/values_constant.dart';
+import '../services/api_service.dart';
+import '../utils/constants/api_constants.dart';
 
 class StorageController {
   static bool checkLoginStatus() {
@@ -81,6 +83,47 @@ class StorageController {
 
   static Future<void> storeData(Map data) async {
     await GetSecureStorage().write(Values.keyStorage, data);
+  }
+
+  /// Refreshes user data from the API and updates local storage
+  /// Returns true if user data was updated successfully, false otherwise
+  static Future<bool> refreshUserDataFromAPI() async {
+    try {
+      print('🔄 Refreshing user data from API...');
+
+      // Check if user is logged in
+      if (!checkLoginStatus()) {
+        print('❌ User not logged in, skipping refresh');
+        return false;
+      }
+
+      // Update token before making request
+      ApiService.updateToken();
+
+      // Fetch fresh profile data from API
+      final StateReturnData response = await ApiService.getData(ApiConstants.profile);
+
+      if (response.isStateSucess < 3 && response.data != null) {
+        // Parse the user data
+        final userModel = UserModel.fromJson(response.data);
+        final userData = userModel.userData;
+
+        // Update stored user data
+        await updateUserData(userData);
+
+        print('✅ User data refreshed successfully');
+        print('   isDoctor: ${userData.isDoctor}');
+        print('   isAdmin: ${userData.isAdmin}');
+
+        return true;
+      } else {
+        print('❌ Failed to refresh user data: Invalid response');
+        return false;
+      }
+    } catch (e) {
+      print('❌ Error refreshing user data: $e');
+      return false;
+    }
   }
 
   // static Future<void> checkLogin() async {

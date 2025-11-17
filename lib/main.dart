@@ -10,6 +10,7 @@ import 'firebase_options.dart';
 
 import 'controllers/profile_controller.dart';
 import 'controllers/storage_controller.dart';
+import 'controllers/home_controller.dart';
 import 'routes/app_routes.dart';
 import 'utils/constants/color_app.dart';
 import 'utils/constants/style_app.dart';
@@ -103,8 +104,79 @@ Future<void> _initializeApp() async {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    // Add this widget as a lifecycle observer
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    // Remove observer when widget is disposed
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // When app resumes from background, check for role updates
+    if (state == AppLifecycleState.resumed) {
+      _checkForRoleUpdates();
+    }
+  }
+
+  /// Checks if user role has changed and updates navigation if needed
+  Future<void> _checkForRoleUpdates() async {
+    print('🔍 App resumed - checking for role updates...');
+
+    // Only check if user is logged in
+    if (!StorageController.checkLoginStatus()) {
+      return;
+    }
+
+    try {
+      // Store current role status before refresh
+      bool wasDoctor = StorageController.isDoctor();
+      bool wasAdmin = StorageController.isAdmin();
+
+      // Refresh user data from API
+      bool refreshed = await StorageController.refreshUserDataFromAPI();
+
+      if (refreshed) {
+        // Check if role changed
+        bool isDoctor = StorageController.isDoctor();
+        bool isAdmin = StorageController.isAdmin();
+
+        if (wasDoctor != isDoctor || wasAdmin != isAdmin) {
+          print('🎉 User role changed! wasDoctor: $wasDoctor -> $isDoctor, wasAdmin: $wasAdmin -> $isAdmin');
+
+          // Find HomeController if it exists and refresh navigation
+          try {
+            if (Get.isRegistered<HomeController>()) {
+              final homeController = Get.find<HomeController>();
+              homeController.refreshNavigationItems();
+              print('✅ Navigation items refreshed');
+            }
+          } catch (e) {
+            print('⚠️ Could not find HomeController: $e');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ Error checking role updates: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

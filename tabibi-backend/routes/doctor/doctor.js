@@ -6,8 +6,10 @@ const Case = require('../../model/Case');
 const User = require('../../model/User');
 const moment = require('moment');
 const Category = require('../../model/Category');
+const Notification = require('../../model/Notification');
 const axios = require('axios');
 const https = require("https");
+const FCMService = require('../../services/fcmService');
 
 router.use(isDoctorMiddleWare);
 router.use(getUser);
@@ -315,7 +317,31 @@ router.put('/my-case/done/:id', async (req, res) => {
                     $set: {
                         inCase: false
                     }
-                })
+                });
+
+                // Send notification to user about case completion
+                await Notification.create({
+                    userId: caseData.userId,
+                    title: 'تم علاج حالتك بنجاح ✅!',
+                    body: 'سعدنا بخدمتك، ونتمنى لك دوام الصحة والعافية زرنا مجددًا إذا احتجت أي رعاية طبية مستقبلية ⚕️🦷',
+                    type: 'case_completed',
+                    relatedId: req.params.id,
+                });
+
+                // Send FCM push notification to user
+                const user = await User.findById(caseData.userId);
+                if (user && user.fcmToken) {
+                    await FCMService.sendToDevice(
+                        user.fcmToken,
+                        'تم علاج حالتك بنجاح ✅!',
+                        'سعدنا بخدمتك، ونتمنى لك دوام الصحة والعافية زرنا مجددًا إذا احتجت أي رعاية طبية مستقبلية ⚕️🦷',
+                        {
+                            type: 'case_completed',
+                            relatedId: req.params.id,
+                        }
+                    );
+                }
+
                 res.status(200).send({ message: 'Info updated' });
             }
         }

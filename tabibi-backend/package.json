@@ -4,7 +4,9 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "send-daily-tips": "node scripts/send-daily-health-tips.js"
+    "send-daily-tips": "node scripts/send-daily-health-tips.js",
+    "dev": "nodemon app.js",
+    "start": "node app.js"
   },
   "author": "",
   "license": "ISC",
@@ -13,6 +15,7 @@
     "axios": "^1.11.0",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
+    "buffer": "^6.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -20,8 +23,12 @@
     "firebase-admin": "^12.6.0",
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
+    "jwa": "^2.0.1",
     "moment": "^2.30.1",
     "mongoose": "^8.9.5",
     "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
   }
 }

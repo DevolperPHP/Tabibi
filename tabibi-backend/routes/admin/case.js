@@ -11,6 +11,47 @@ const FCMService = require('../../services/fcmService')
 router.use(isAdminMiddleWare)
 router.use(getUser)
 
+// Helper function to get service-specific notification messages
+function getServiceTypeNotification(serviceType, action) {
+    const messages = {
+        'تنظيف الاسنان': {
+            accept: {
+                title: '✨🦷 تم قبول حالتك لتنظيف الأسنان !',
+                body: 'أطبائنا بانتظارك لإعادة ابتسامتك إلى إشراقتها 😁💙'
+            },
+            reject: {
+                title: '❌ رفض حالة تنظيف',
+                body: '⚠️ نأسف، لم يتم قبول حالتك لتنظيف الأسنان.\nيمكنك التواصل معنا لمعرفة تفاصيل حالتك.'
+            }
+        },
+        'معالجة الاسنان': {
+            accept: {
+                title: 'قبول حالة معالجة',
+                body: '🦷✨ تم قبول حالتك لمعالجة الأسنان!\n\nخطوتك القادمة نحو أسنان سليمة تبدأ قريبًا مع طبيبك 💙🧑🏻‍⚕️'
+            },
+            reject: {
+                title: 'رفض حالة معالجة',
+                body: '⚠️ نأسف، لم يتم قبول حالتك لمعالجة الأسنان.\n يمكنك التواصل معنا لمعرفة تفاصيل حالتك.'
+            }
+        },
+        'تعويض الاسنان': {
+            accept: {
+                title: '✅ قبول حالة تعويض',
+                body: '🦷✨تم قبول حالتك لتعويض الأسنان! \n\nطبيبك سيحدد موعد العلاج قريبًا. نحن متحمسون لرؤيتك تستعيد ابتسامتك بثقة 😁💙'
+            },
+            reject: {
+                title: 'رفض حالة تعويض',
+                body: '⚠️ نأسف، لم يتم قبول حالتك لتعويض الاسنان.\n\nيمكنك تواصل معنا لمعرفة تفاصيل حالتك. '
+            }
+        }
+    };
+
+    return messages[serviceType]?.[action] || {
+        title: action === 'accept' ? 'تم قبول حالتك' : 'تم رفض حالتك',
+        body: action === 'accept' ? 'تمت مراجعة حالتك وتم قبولها' : 'تمت مراجعة حالتك وتم رفضها'
+    };
+}
+
 router.get('/', async (req, res) => {
     try {
         // Get all cases regardless of adminStatus for tabs filtering
@@ -56,11 +97,14 @@ router.put('/accept/:id', async (req, res) => {
             }
         })
 
+        // Get service-specific notification messages
+        const { title, body } = getServiceTypeNotification(caseData.type, 'accept');
+
         // Send notification to user about case acceptance
         await Notification.create({
             userId: caseData.userId,
-            title: 'تم قبول حالتك',
-            body: `تمت مراجعة حالتك من ${caseData.category} وتم قبولها من قبل الإدارة`,
+            title: title,
+            body: body,
             type: 'case_accepted',
             relatedId: req.params.id,
         });
@@ -70,8 +114,8 @@ router.put('/accept/:id', async (req, res) => {
         if (user && user.fcmToken) {
             await FCMService.sendToDevice(
                 user.fcmToken,
-                'تم قبول حالتك',
-                `تمت مراجعة حالتك من ${caseData.category} وتم قبولها من قبل الإدارة`,
+                title,
+                body,
                 {
                     type: 'case_accepted',
                     relatedId: req.params.id,
@@ -102,11 +146,14 @@ router.put('/reject/:id', async (req, res) => {
             }
         })
 
+        // Get service-specific notification messages
+        const { title, body } = getServiceTypeNotification(caseData.type, 'reject');
+
         // Send notification to user about case rejection
         await Notification.create({
             userId: caseData.userId,
-            title: 'تم رفض حالتك',
-            body: `تمت مراجعة حالتك من ${caseData.category} وتم رفضها من قبل الإدارة`,
+            title: title,
+            body: body,
             type: 'case_rejected',
             relatedId: req.params.id,
         });
@@ -116,8 +163,8 @@ router.put('/reject/:id', async (req, res) => {
         if (user && user.fcmToken) {
             await FCMService.sendToDevice(
                 user.fcmToken,
-                'تم رفض حالتك',
-                `تمت مراجعة حالتك من ${caseData.category} وتم رفضها من قبل الإدارة`,
+                title,
+                body,
                 {
                     type: 'case_rejected',
                     relatedId: req.params.id,
