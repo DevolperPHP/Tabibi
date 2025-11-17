@@ -1,0 +1,20 @@
+                        -H/Users/taherabbas/Downloads/flutter/packages/flutter_tools/gradle/src/main/groovy
+-DCMAKE_SYSTEM_NAME=Android
+-DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+-DCMAKE_SYSTEM_VERSION=21
+-DANDROID_PLATFORM=android-21
+-DANDROID_ABI=x86
+-DCMAKE_ANDROID_ARCH_ABI=x86
+-DANDROID_NDK=/Users/taherabbas/Library/Android/sdk/ndk/28.0.13004108
+-DCMAKE_ANDROID_NDK=/Users/taherabbas/Library/Android/sdk/ndk/28.0.13004108
+-DCMAKE_TOOLCHAIN_FILE=/Users/taherabbas/Library/Android/sdk/ndk/28.0.13004108/build/cmake/android.toolchain.cmake
+-DCMAKE_MAKE_PROGRAM=/Users/taherabbas/Library/Android/sdk/cmake/3.22.1/bin/ninja
+-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/Users/taherabbas/Flutter_app/my_doctor/build/app/intermediates/cxx/RelWithDebInfo/154q3z1t/obj/x86
+-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/Users/taherabbas/Flutter_app/my_doctor/build/app/intermediates/cxx/RelWithDebInfo/154q3z1t/obj/x86
+-DCMAKE_BUILD_TYPE=RelWithDebInfo
+-B/Users/taherabbas/Flutter_app/my_doctor/android/app/.cxx/RelWithDebInfo/154q3z1t/x86
+-GNinja
+-Wno-dev
+--no-warn-unused-cli
+                        Build command args: []
+                        Version: 2

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "301575248264",
+    "project_id": "tabibi-d938a",
+    "storage_bucket": "tabibi-d938a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:301575248264:android:3eecb808e3ac6736e0c23d",
+        "android_client_info": {
+          "package_name": "com.example.my_doctor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC342y_WD09pGwgx8FC4OkNlQuADkgbFI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

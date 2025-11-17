@@ -1,0 +1,7 @@
+# Firebase configuration files
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+google-services.json
+GoogleService-Info.plist
+serviceAccountKey.json
+tabibi-d938a-firebase-adminsdk-fbsvc-e3b218219a.json

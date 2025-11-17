@@ -1,0 +1,2 @@
+/Users/taherabbas/Flutter_app/my_doctor/android/app/.cxx/RelWithDebInfo/154q3z1t/arm64-v8a/CMakeFiles/edit_cache.dir
+/Users/taherabbas/Flutter_app/my_doctor/android/app/.cxx/RelWithDebInfo/154q3z1t/arm64-v8a/CMakeFiles/rebuild_cache.dir

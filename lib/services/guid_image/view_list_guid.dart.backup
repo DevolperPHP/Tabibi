@@ -1,0 +1,244 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../controllers/case_controller.dart';
+import '../../data/models/instruction_model.dart';
+import '../../utils/design_system/modern_theme.dart';
+import '../../views/widgets/common/loading_indicator.dart';
+import 'app_controller.dart';
+
+class ViewListGuid extends StatelessWidget {
+  final AppController controller = Get.put(AppController());
+  CaseController caseController = Get.find<CaseController>();
+  ViewListGuid({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Ensure instructions are loaded based on service type
+    if (caseController.currentInstructions.isEmpty && caseController.selectedServiceType.value.isNotEmpty) {
+      caseController.setServiceType(caseController.selectedServiceType.value);
+    }
+    
+    return Scaffold(
+      backgroundColor: ModernTheme.background,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: ModernTheme.textPrimary),
+          onPressed: () => Get.back(),
+        ),
+        title: Text(
+          'التقط صور الأسنان',
+          style: ModernTheme.headlineMedium.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          // Progress Indicator
+          _buildProgressIndicator(),
+          
+          // Instructions Card
+          _buildInstructionsCard(),
+          
+          SizedBox(height: ModernTheme.spaceMD),
+          
+          // Images Grid
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: ModernTheme.spaceMD),
+              child: Column(
+                children: [
+            Padding(
+                padding: EdgeInsets.symmetric(horizontal: Values.circle),
+                child: Obx(() {
+                  final int maxColumns = controller.countViewItems().value;
+                  final int itemCount = caseController.currentInstructions.length;
+                  
+                  // Calculate item width based on screen width and columns
+                  final double screenWidth = Values.width - (Values.circle * 2);
+                  final double itemWidth = (screenWidth - (5 * (maxColumns - 1))) / maxColumns;
+                  final double itemHeight = itemWidth / 0.7; // childAspectRatio: 0.7
+                  
+                  return Wrap(
+                    spacing: 5,
+                    runSpacing: 5,
+                    alignment: WrapAlignment.center, // Center items in each row
+                    children: caseController.currentInstructions.map((instruction) {
+                      return SizedBox(
+                        width: itemWidth,
+                        height: itemHeight,
+                        child: InkWell(
+                          onTap: () {
+                            caseController.selectInstruction(instruction);
+                          },
+                          child: Container(
+                              decoration: BoxDecoration(
+                                  border:
+                                      Border.all(color: ColorApp.borderColor),
+                                  borderRadius: BorderRadius.circular(
+                                      Values.circle * 0.5),
+                                  color: ColorApp.backgroundColor,
+                                  boxShadow: ShadowValues.shadowValuesBlur),
+                              child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                        child: Container(
+                                            margin: EdgeInsets.all(
+                                                Values.circle * 0.3),
+                                            decoration: BoxDecoration(
+                                                border: Border.all(
+                                                    color:
+                                                        ColorApp.borderColor),
+                                                borderRadius: BorderRadius.circular(
+                                                    Values.circle * 0.5),
+                                                color: ColorApp.backgroundColor,
+                                                boxShadow:
+                                                    ShadowValues.shadowValues),
+                                            child: Hero(
+                                                tag: instruction.imagePath
+                                                    .trim(),
+                                                child: ClipRRect(
+                                                    borderRadius: BorderRadius.circular(
+                                                        Values.circle * 0.5),
+                                                    child: Obx(() {
+                                                      // Check if user captured a new image
+                                                      if (instruction.image.value != null) {
+                                                        return Image.file(
+                                                          instruction.image.value!,
+                                                          fit: BoxFit.cover,
+                                                        );
+                                                      }
+                                                      
+                                                      // Check if there's an existing image from rejected case
+                                                      final existingImageUrl = caseController.existingImageUrls[instruction.name];
+                                                      if (existingImageUrl != null && existingImageUrl.isNotEmpty) {
+                                                        return Opacity(
+                                                          opacity: 0.4,
+                                                          child: Image.network(
+                                                            'http://165.232.78.163/upload/images/$existingImageUrl',
+                                                            fit: BoxFit.cover,
+                                                            errorBuilder: (context, error, stackTrace) {
+                                                              // If network image fails, show placeholder
+                                                              return Opacity(
+                                                                opacity: 0.3,
+                                                                child: Image.asset(
+                                                                  instruction.imagePath.trim(),
+                                                                  fit: BoxFit.cover,
+                                                                ),
+                                                              );
+                                                            },
+                                                          ),
+                                                        );
+                                                      }
+                                                      
+                                                      // Default: show instruction placeholder
+                                                      return Opacity(
+                                                        opacity: 0.3,
+                                                        child: Image.asset(
+                                                          instruction.imagePath.trim(),
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      );
+                                                    }))))),
+                                    Padding(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: Values.spacerV * 0.5,
+                                            vertical: Values.spacerV * 0.3),
+                                        child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(instruction.title,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: StringStyle
+                                                      .textLabilBold
+                                                      .copyWith(
+                                                          color: ColorApp
+                                                              .primaryColor)),
+                                              SizedBox(height: 8),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Icon(
+                                                      Icons.camera_alt_outlined,
+                                                      color: ColorApp
+                                                          .primaryColor),
+                                                  Obx(() =>
+                                                      instruction.image.value !=
+                                                              null
+                                                          ? Image.file(
+                                                              instruction
+                                                                  .image.value!,
+                                                              height: 25,
+                                                            )
+                                                          : SizedBox())
+                                                ],
+                                              ),
+                                            ])),
+                                  ])),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                })),
+            SizedBox(
+              width: Values.width,
+              height: 80,
+              child: Obx(() {
+                List<Instruction> instructionsImage = [];
+                for (int i = 0; i < caseController.currentInstructions.length; i++) {
+                  if (caseController.currentInstructions[i].image.value != null) {
+                    instructionsImage.add(caseController.currentInstructions[i]);
+                  }
+                }
+
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: instructionsImage.length,
+                  itemBuilder: (context, index) => Container(
+                    margin: EdgeInsets.symmetric(
+                        horizontal: Values.circle * .5,
+                        vertical: Values.circle * .5),
+                    decoration: BoxDecoration(
+                        border:
+                            Border.all(color: ColorApp.backgroundColorContent),
+                        borderRadius:
+                            BorderRadius.circular(Values.circle * 0.5),
+                        color: ColorApp.backgroundColor,
+                        boxShadow: ShadowValues.shadowValuesBlur,
+                        image: DecorationImage(
+                            image: FileImage(
+                                instructionsImage[index].image.value!),
+                            fit: BoxFit.cover)),
+                    height: 70,
+                    width: 70,
+                    child: Text(
+                      '${index + 1}',
+                      style: StringStyle.headerStyle,
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+      Center(
+          child: SizedBox(
+              width: Values.width * 0.7,
+              child: Obx(() => caseController.isLoading.value
+                  ? LoadingIndicator()
+                  : BottonsC.action1(
+                      'ارسال الحالة', caseController.submitSendInfo))))
+    ])));
+  }
+}
