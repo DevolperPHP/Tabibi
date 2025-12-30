@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../controllers/home_controller.dart';
+import '../../../routes/app_routes.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -27,7 +28,7 @@ class AdminDashboard extends StatelessWidget {
           ),
         ),
         SizedBox(height: 24),
-        
+
         // Navigation Cards
         GridView.count(
           shrinkWrap: true,
@@ -61,6 +62,7 @@ class AdminDashboard extends StatelessWidget {
               color: Colors.purple,
               index: 1,
             ),
+            _buildBannedUsersCard(),
           ],
         ),
       ],
@@ -96,6 +98,42 @@ class AdminDashboard extends StatelessWidget {
               SizedBox(height: 12),
               Text(
                 title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBannedUsersCard() {
+    return GestureDetector(
+      onTap: () {
+        Get.toNamed(AppRoutes.bannedUsers);
+      },
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.block,
+                size: 48,
+                color: Colors.red,
+              ),
+              SizedBox(height: 12),
+              Text(
+                'إدارة المستخدمين',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

@@ -185,6 +185,13 @@ class AuthController extends GetxController {
             {'email': email.text.trim(), 'password': password.text.trim()});
 
         if (data.isStateSucess <= 2) {
+          // Check if user is banned
+          if (data.data != null && data.data['isBanned'] == true) {
+            isLoading(false);
+            _showBannedUserDialog(data.data['banReason']);
+            return;
+          }
+
           await StorageController.storeData(data.data);
           ApiService.updateToken();
           MessageSnak.message('تم تسجيل الدخول', color: ColorApp.greenColor);
@@ -196,6 +203,12 @@ class AuthController extends GetxController {
           isLoading(false);
           Get.offAndToNamed(AppRoutes.home);
         } else {
+          // Check if user is banned (403 status)
+          if (data.data != null && data.data['isBanned'] == true) {
+            isLoading(false);
+            _showBannedUserDialog(data.data['banReason']);
+            return;
+          }
           // MessageSnak.message('حصل خطا', color: ColorApp.greenColor);
           // print(data.data);
           MessageSnak.message('تأكد من بيانات الحساب',
@@ -211,6 +224,47 @@ class AuthController extends GetxController {
       MessageSnak.message('يرجى ملاء كل الحقول ');
     }
     isLoading(false);
+  }
+
+  // Show banned user dialog
+  void _showBannedUserDialog(String? banReason) {
+    Get.dialog(
+      AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.block, color: Colors.red, size: 28),
+            SizedBox(width: 12),
+            Text(
+              'حسابك محظور',
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'تم حظر حسابك. تواصل مع الدعم للمزيد من المعلومات',
+          style: TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text(
+              'حسناً',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
   }
 
   void submitFormRegister() async {

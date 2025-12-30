@@ -65,6 +65,16 @@ router.post("/login", async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({ message: "Invalid credentials" });
         }
+
+        // Check if user is banned
+        if (user.isBanned) {
+            return res.status(403).json({
+                message: "حسابك محظور. تواصل مع الإدارة للمزيد من المعلومات.",
+                isBanned: true,
+                banReason: user.banReason
+            });
+        }
+
         const token = jwt.sign(
             { id: user._id, isAdmin: user.isAdmin },
             JWT_SECRET,

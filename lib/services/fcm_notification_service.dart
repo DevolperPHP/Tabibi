@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -225,8 +226,83 @@ class FCMNotificationService {
     print('🔔 [Foreground] Title: ${message.notification?.title}');
     print('📝 [Foreground] Body: ${message.notification?.body}');
 
-    // Show local notification
+    // Check if this is a ban notification - handle immediately
+    final type = message.data['type'];
+    if (type == 'user_banned') {
+      print('⛔ [BAN] User banned notification received');
+      await _handleUserBan(message);
+      return;
+    }
+
+    // Show local notification for other types
     await _showLocalNotification(message);
+  }
+
+  /// Handle user ban - immediately logout and show ban dialog
+  static Future<void> _handleUserBan(RemoteMessage message) async {
+    try {
+      final banReason = message.data['banReason'] ?? 'Violation of terms';
+
+      print('⛔ [BAN] Logging out user immediately...');
+
+      // Clear stored data
+      StorageController.deleteAllData();
+
+      // Show ban dialog and navigate to login
+      _showBannedDialog(banReason);
+    } catch (e) {
+      print('❌ [BAN] Error handling ban: $e');
+    }
+  }
+
+  /// Show banned user dialog and navigate to login
+  static void _showBannedDialog(String banReason) {
+    // Force navigate to login and show dialog
+    Get.offAllNamed('/login');
+
+    // Small delay to ensure login screen is loaded
+    Future.delayed(const Duration(milliseconds: 500), () {
+      Get.dialog(
+        PopScope(
+          canPop: false, // Prevent closing with back button
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.block, color: Colors.red, size: 28),
+                SizedBox(width: 12),
+                Text(
+                  'حسابك محظور',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'تم حظر حسابك. تواصل مع الدعم للمزيد من المعلومات',
+              style: TextStyle(fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(),
+                child: Text(
+                  'حسناً',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        barrierDismissible: false,
+      );
+    });
   }
 
   /// Handle notification tap

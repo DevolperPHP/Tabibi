@@ -37,6 +37,13 @@ class ApiConstants {
   static String healthTipsSend() => 'admin/health-tips/send';
   static String healthTipsDelete(String id) => 'admin/health-tips/$id';
 
+  // User management endpoints
+  static const String usersList = 'admin/users';
+  static String usersGet(String id) => 'admin/users/$id';
+  static String usersBan(String id) => 'admin/users/$id/ban';
+  static String usersUnban(String id) => 'admin/users/$id/unban';
+  static String usersDelete(String id) => 'admin/users/$id';
+
   static String categoryEdit(String id) => 'admin/category/edit/$id';
   static String roleAccept(String id) =>
       'admin/role/requests/update/accept/$id';

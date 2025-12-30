@@ -19,6 +19,7 @@ const diagnose = require('./routes/diagnose/diagnose')
 const notifications = require('./routes/user/notifications')
 const fcmToken = require('./routes/user/fcm-token')
 const healthTips = require('./routes/admin/health-tips')
+const adminUsers = require('./routes/admin/users')
 require("dotenv").config({ path: "./key.env" });
 const paymentRoutes = require("./routes/doctor/payment");
 
@@ -60,6 +61,7 @@ app.use('/diagnose', diagnose)
 app.use('/notifications', notifications)
 app.use('/users', fcmToken)
 app.use('/admin/health-tips', healthTips)
+app.use('/admin/users', adminUsers)
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

@@ -39,6 +39,16 @@ const isUserMiddleware = async (req, res, next) => {
             return res.status(401).json({ message: "Invalid token. User not found." });
         }
 
+        // Check if user is banned
+        if (user.isBanned) {
+            console.log('⛔ Banned user attempted access:', user.email);
+            return res.status(403).json({
+                message: "حسابك محظور. تواصل مع الإدارة للمزيد من المعلومات.",
+                isBanned: true,
+                banReason: user.banReason
+            });
+        }
+
         console.log('👤 User authenticated:', user.name || user.email);
         req.user = user; // Attach user to request object
         next();

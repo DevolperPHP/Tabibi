@@ -6,6 +6,7 @@ import '../views/screens/admin/edit_post.dart';
 import '../views/screens/admin/new_post.dart';
 import '../views/screens/admin/post_view.dart';
 import '../views/screens/admin/view_details_role.dart';
+import '../views/screens/admin/banned_users_screen.dart';
 import '../views/screens/auth/login.dart';
 import '../views/screens/auth/re_password.dart';
 import '../views/screens/auth/register.dart';
@@ -67,6 +68,7 @@ class AppRoutes {
   static const faqScreen = '/FAQ-Screen';
   static const notifications = '/notifications';
   static const healthTips = '/admin/health-tips';
+  static const bannedUsers = '/admin/banned-users';
 
   static final routes = [
     GetPage(
@@ -102,5 +104,6 @@ class AppRoutes {
     GetPage(name: AppRoutes.faqScreen, page: () => FAQScreen()),
     GetPage(name: notifications, page: () => const NotificationsScreen()),
     GetPage(name: healthTips, page: () => const HealthTipsScreen()),
+    GetPage(name: bannedUsers, page: () => BannedUsersScreen()),
   ];
 }

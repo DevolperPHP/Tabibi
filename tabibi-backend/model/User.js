@@ -105,6 +105,28 @@ const userModel = mongoose.Schema({
         type: String,
         default: null
     },
+
+    // Banned user fields
+    isBanned: {
+        type: Boolean,
+        default: false
+    },
+
+    bannedAt: {
+        type: Date,
+        default: null
+    },
+
+    bannedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
+
+    banReason: {
+        type: String,
+        default: null
+    },
 })
 
 const User = mongoose.model("User", userModel, "User")
