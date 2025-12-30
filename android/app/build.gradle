@@ -4,10 +4,7 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-// Google Services plugin configuration - only apply for debug builds
-if (project.hasProperty('enableFirebase') && project.property('enableFirebase') == 'true') {
-    apply plugin: "com.google.gms.google-services"
-}
+apply plugin: "com.google.gms.google-services"
 
 android {
     namespace = "com.tabibi.app"

@@ -7,13 +7,18 @@
 -keep class io.flutter.plugins.**  { *; }
 
 # GetX rules
--keep class com.example.myDoctor.controllers.** { *; }
--keep class com.example.myDoctor.services.** { *; }
+-keep class com.tabibi.app.controllers.** { *; }
+-keep class com.tabibi.app.services.** { *; }
 
 # Firebase rules
 -keep class com.google.firebase.** { *; }
 -keep class com.google.android.gms.** { *; }
 -dontwarn com.google.firebase.**
+
+# Firebase Messaging
+-keep class com.google.firebase.messaging.** { *; }
+-keep class com.google.android.gms.measurement.** { *; }
+-keep class com.google.android.gms.stats.** { *; }
 
 # Google Play Services
 -keep class com.google.android.gms.internal.** { *; }
