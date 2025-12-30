@@ -11,6 +11,7 @@ import '../views/screens/auth/re_password.dart';
 import '../views/screens/auth/register.dart';
 import '../views/screens/auth/modern_register.dart';
 import '../views/screens/auth/register_test.dart';
+import '../views/screens/auth/otp_verification_screen.dart';
 import '../views/screens/categores_and_cases/accept_case_screen.dart';
 import '../views/screens/categores_and_cases/add_category.dart';
 import '../views/screens/categores_and_cases/case_details_screen.dart';
@@ -76,6 +77,7 @@ class AppRoutes {
     GetPage(name: register, page: () => Register(), binding: LoginBinding()),
     GetPage(name: modernRegister, page: () => ModernRegister(), binding: LoginBinding()),
     GetPage(name: registerTest, page: () => RegisterTest(), binding: LoginBinding()),
+    GetPage(name: otp, page: () => const OTPVerificationScreen(), binding: LoginBinding()),
     GetPage(
         name: rePassword, page: () => RePassword(), binding: LoginBinding()),
     GetPage(name: home, page: () => HomeScreen(), binding: HomeBinding()),

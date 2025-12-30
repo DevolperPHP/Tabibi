@@ -57,7 +57,7 @@ class ProfileController extends GetxController {
     age.text = userProfile.value!.userData.age.toString();
     city.value = userProfile.value!.userData.city;
     zone.value = userProfile.value!.userData.zone ?? '';
-    phone.text = userProfile.value!.userData.phone ?? '';
+    // Phone is read-only, don't populate it for editing
     telegram.text = userProfile.value!.userData.telegram ?? '';
     bp.value = userProfile.value!.userData.bp;
     diabetic.value = userProfile.value!.userData.diabetic;
@@ -89,7 +89,7 @@ class ProfileController extends GetxController {
         'age': age.text.trim(),
         'city': city.value.trim(),
         'zone': zoneValueToSave,
-        'phone': phone.text.trim(),
+        // Phone is read-only, don't send it in update
         'telegram': telegram.text.trim(),
         'bp': bp.value,
         'diabetic': diabetic.value,

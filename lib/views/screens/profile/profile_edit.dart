@@ -5,8 +5,6 @@ import 'package:tabibi/views/widgets/common/loading_indicator.dart';
 
 import '../../../controllers/profile_controller.dart';
 import '../../../utils/constants/modern_theme.dart';
-import '../../../utils/constants/images_url.dart';
-import '../../../utils/constants/values_constant.dart';
 import '../../../../utils/validators.dart';
 import '../../widgets/modern/modern_input_field.dart';
 import '../../widgets/modern/modern_button.dart';
@@ -175,20 +173,7 @@ class ProfileEdit extends StatelessWidget {
                         validator: (value) => Validators.notEmpty(value, 'العمر مطلوب'),
                       ),
                       const SizedBox(height: ModernTheme.spaceMD),
-                      
-                      ModernInputField(
-                        label: 'رقم الهاتف',
-                        controller: profileController.phone,
-                        prefixIcon: Icons.phone,
-                        keyboardType: TextInputType.phone,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(11),
-                        ],
-                        validator: (value) => Validators.notEmpty(value, 'رقم الهاتف مطلوب'),
-                      ),
-                      const SizedBox(height: ModernTheme.spaceMD),
-                      
+
                       ModernInputField(
                         label: 'حساب التليجرام',
                         controller: profileController.telegram,

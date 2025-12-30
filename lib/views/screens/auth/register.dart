@@ -8,6 +8,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../../controllers/auth_controller.dart';
+import '../../../routes/app_routes.dart';
 import '../../../utils/constants/color_app.dart';
 import '../../../utils/constants/style_app.dart';
 import '../../../utils/constants/values_constant.dart';
@@ -20,7 +21,7 @@ import '../../widgets/message_snak.dart';
 
 class Register extends StatelessWidget {
   Register({super.key});
-  AuthController authController = Get.put(AuthController(), permanent: true);
+  AuthController authController = Get.find<AuthController>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -475,7 +476,7 @@ class Register extends StatelessWidget {
     );
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     // Validate form fields first
     if (authController.formKeyRegister.currentState?.validate() ?? false) {
       // Manual validation for zone (not a FormField)
@@ -497,8 +498,32 @@ class Register extends StatelessWidget {
         return;
       }
 
-      // All validations passed, submit the form
-      authController.submitFormRegister();
+      try {
+        // Store pending registration data
+        authController.pendingRegistrationData.value = {
+          'name': authController.fullName.text.trim(),
+          'age': authController.age.text.trim(),
+          'city': authController.city.value.trim(),
+          'zone': authController.zone.value.contains('في حال عدم وجود')
+              ? 'غير محدد'
+              : authController.zone.value.trim(),
+          'email': authController.email.text.trim(),
+          'password': authController.password.text.trim(),
+          'phone': authController.phone.text.trim(),
+          'telegram': authController.telegram.text.trim(),
+          'gender': authController.gender.value,
+        };
+
+        // Send OTP to phone number
+        await authController.sendOTP(
+          phoneNumber: authController.phone.text.trim(),
+        );
+
+        // Navigate to OTP verification screen
+        Get.toNamed(AppRoutes.otp);
+      } catch (e) {
+        MessageSnak.message('فشل إرسال رمز التحقق', color: ColorApp.redColor);
+      }
     } else {
       MessageSnak.message('يرجى ملء كل الحقول المطلوبة',
           color: ColorApp.redColor);

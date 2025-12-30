@@ -4,6 +4,9 @@ class ApiConstants {
   // Auth User
   static const String login = 'passport/login';
   static const String register = 'passport/register';
+  // OTP
+  static const String sendOTP = 'passport/otp/send';
+  static const String verifyOTP = 'passport/otp/verify';
   // Admin
   static const String roleRequests = 'admin/role/requests';
   static String roleRequestsGet(String id) => 'admin/role/requests/get/$id';

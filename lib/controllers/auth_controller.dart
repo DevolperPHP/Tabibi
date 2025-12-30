@@ -35,6 +35,10 @@ class AuthController extends GetxController {
 
   RxString gender = ''.obs;
   RxBool acceptTerms = false.obs;
+
+  // OTP Related
+  RxString otpMessageId = ''.obs;
+  RxMap<String, dynamic> pendingRegistrationData = <String, dynamic>{}.obs;
   List<String> cites = [
     "بغداد",
     "البصرة",
@@ -61,6 +65,100 @@ class AuthController extends GetxController {
     await Future.delayed(Duration(seconds: 1));
 
     isLoading(false);
+  }
+
+  // Send OTP
+  Future<void> sendOTP({required String phoneNumber}) async {
+    isLoading(true);
+
+    try {
+      // Send phone number as-is (backend will format it)
+      final response = await ApiService.postData(ApiConstants.sendOTP, {
+        'phoneNumber': phoneNumber,
+      });
+
+      if (response.isStateSucess <= 2 && response.data != null) {
+        otpMessageId.value = response.data['messageId'] ?? '';
+        MessageSnak.message('تم إرسال رمز التحقق بنجاح',
+            color: ColorApp.greenColor);
+      } else {
+        throw Exception('Failed to send OTP');
+      }
+    } catch (e) {
+      MessageSnak.message('فشل إرسال رمز التحقق', color: ColorApp.redColor);
+      rethrow;
+    } finally {
+      isLoading(false);
+    }
+  }
+
+  // Verify OTP
+  Future<void> verifyOTP({
+    required String phoneNumber,
+    required String otpCode,
+  }) async {
+    isLoading(true);
+
+    try {
+      final response = await ApiService.postData(ApiConstants.verifyOTP, {
+        'messageId': otpMessageId.value,
+        'code': otpCode,
+      });
+
+      if (response.isStateSucess <= 2 && response.data != null) {
+        final verified = response.data['verified'] ?? false;
+
+        if (verified) {
+          // OTP verified successfully, now complete registration
+          await _completeRegistration();
+        } else {
+          throw Exception('Invalid OTP');
+        }
+      } else {
+        throw Exception('OTP verification failed');
+      }
+    } catch (e) {
+      MessageSnak.message('رمز التحقق غير صحيح', color: ColorApp.redColor);
+      rethrow;
+    } finally {
+      isLoading(false);
+    }
+  }
+
+  // Complete registration after OTP verification
+  Future<void> _completeRegistration() async {
+    try {
+      final data = await ApiService.postData(ApiConstants.register, {
+        'name': pendingRegistrationData['name'],
+        'age': pendingRegistrationData['age'],
+        'city': pendingRegistrationData['city'],
+        'zone': pendingRegistrationData['zone'],
+        'email': pendingRegistrationData['email'],
+        'password': pendingRegistrationData['password'],
+        'phone': pendingRegistrationData['phone'],
+        'telegram': pendingRegistrationData['telegram'],
+        'gender': pendingRegistrationData['gender'],
+      });
+
+      if (data.isStateSucess <= 2) {
+        MessageSnak.message('تم إنشاء الحساب بنجاح',
+            color: ColorApp.greenColor);
+        // Clear form data before navigating
+        clearForms();
+        Get.offAllNamed(AppRoutes.login);
+      } else {
+        String errorMsg = 'حدث خطأ أثناء التسجيل';
+        if (data.data != null &&
+            data.data is Map &&
+            data.data.containsKey('message')) {
+          errorMsg = data.data['message'];
+        }
+        MessageSnak.message(errorMsg, color: ColorApp.redColor);
+      }
+    } catch (e) {
+      MessageSnak.message('فشل إنشاء الحساب', color: ColorApp.redColor);
+      rethrow;
+    }
   }
 
   Rx<String?> selectedCountry = Rx('');
@@ -140,56 +238,37 @@ class AuthController extends GetxController {
       try {
         isLoading(true);
 
-        // Determine the zone value to save
-        String zoneValueToSave;
-        if (zone.value.contains('في حال عدم وجود')) {
-          zoneValueToSave = 'غير محدد';
-        } else {
-          zoneValueToSave = zone.value.trim();
-        }
-
-        StateReturnData data =
-            await ApiService.postData(ApiConstants.register, {
+        // Store pending registration data
+        pendingRegistrationData.value = {
           'name': fullName.text.trim(),
           'age': age.text.trim(),
           'city': city.value.trim(),
-          'zone': zoneValueToSave,
+          'zone': zone.value.contains('في حال عدم وجود')
+              ? 'غير محدد'
+              : zone.value.trim(),
           'email': email.text.trim(),
           'password': password.text.trim(),
           'phone': phone.text.trim(),
           'telegram': telegram.text.trim(),
           'gender': gender.value,
-        });
+        };
 
-        if (data.isStateSucess <= 2) {
-          Get.back();
-          Get.back();
-          MessageSnak.message('تم أنشاء الحساب', color: ColorApp.greenColor);
-          isLoading(false);
-        } else {
-          // MessageSnak.message('حصل خطا', color: ColorApp.greenColor);
-          // print(data.data);
-          if (data.data != null &&
-              data.data is Map &&
-              data.data.containsKey('message')) {
-            MessageSnak.message(data.data['message'], color: ColorApp.redColor);
-          } else {
-            MessageSnak.message('حدث خطأ أثناء التسجيل',
-                color: ColorApp.redColor);
-          }
-        }
+        // Send OTP to phone number
+        await sendOTP(phoneNumber: phone.text.trim());
+
+        // Navigate to OTP verification screen
+        Get.toNamed(AppRoutes.otp);
       } catch (e) {
-        MessageSnak.message('حصل خطا $e');
+        MessageSnak.message('فشل إرسال رمز التحقق', color: ColorApp.redColor);
       } finally {
         await Future.delayed(Duration(seconds: 1));
         isLoading(false);
       }
     } else {
-      MessageSnak.message('يرجى ملاء كل الحقول ');
+      MessageSnak.message('يرجى ملء كل الحقول المطلوبة',
+          color: ColorApp.redColor);
     }
     isLoading(false);
-
-    // Get.toNamed(AppRoutes.home);
   }
 
   void submitFormRePassword() async {
@@ -204,16 +283,26 @@ class AuthController extends GetxController {
 
   @override
   void onClose() {
-    // تحرير الموارد عند إغلاق الـ Controller
-    email.dispose();
-    password.dispose();
-    confirmPassword.dispose();
-    fullName.dispose();
-    age.dispose();
-    jobTitle.dispose();
-    nationality.dispose();
-    phone.dispose();
-    telegram.dispose();
+    // Don't dispose controllers - fenix: true will reuse this controller
+    // Just call super to complete the lifecycle
     super.onClose();
+  }
+
+  // Clear all form fields
+  void clearForms() {
+    email.clear();
+    password.clear();
+    confirmPassword.clear();
+    fullName.clear();
+    age.clear();
+    jobTitle.clear();
+    nationality.clear();
+    phone.clear();
+    telegram.clear();
+    zone.value = '';
+    gender.value = '';
+    acceptTerms.value = false;
+    otpMessageId.value = '';
+    pendingRegistrationData.clear();
   }
 }
