@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/storage_controller.dart';
@@ -38,6 +39,59 @@ class ApiService {
     }
   }
 
+  // Handle banned user (403) - logout and show ban dialog
+  static void _handleBannedUser(String? banReason) {
+    if (StorageController.checkLoginStatus()) {
+      print('⛔ Banned user detected - logging out');
+      StorageController.deleteAllData();
+      Get.offAllNamed('/login');
+
+      // Show ban dialog after navigating to login
+      Future.delayed(const Duration(milliseconds: 500), () {
+        Get.dialog(
+          PopScope(
+            canPop: false, // Prevent closing with back button
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Row(
+                children: const [
+                  Icon(Icons.block, color: Colors.red, size: 28),
+                  SizedBox(width: 12),
+                  Text(
+                    'حسابك محظور',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              content: const Text(
+                'تم حظر حسابك. تواصل مع الدعم للمزيد من المعلومات',
+                style: TextStyle(fontSize: 16),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Get.back(),
+                  child: const Text(
+                    'حسناً',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          barrierDismissible: false,
+        );
+      });
+    }
+  }
+
   // دالة GET لجلب البيانات وإرجاعها على شكل Map
   static Future<StateReturnData> getData(String endpoint) async {
     try {
@@ -47,6 +101,13 @@ class ApiService {
       if (response.statusCode == 401) {
         _handleUnauthorized();
         return StateReturnData(3, {'message': 'Unauthorized'});
+      }
+
+      // Check for 403 Forbidden - banned user
+      if (response.statusCode == 403) {
+        final banReason = response.data['banReason'] as String?;
+        _handleBannedUser(banReason);
+        return StateReturnData(3, response.data);
       }
 
       if (response.statusCode! >= 200 && response.statusCode! <= 202) {
@@ -59,6 +120,11 @@ class ApiService {
         // Check for 401 Unauthorized
         if (e.response?.statusCode == 401) {
           _handleUnauthorized();
+        }
+        // Check for 403 Forbidden - banned user
+        if (e.response?.statusCode == 403) {
+          final banReason = e.response?.data['banReason'] as String?;
+          _handleBannedUser(banReason);
         }
       }
       print('Error in Get request: $e');
@@ -81,6 +147,13 @@ class ApiService {
         return StateReturnData(3, {'message': 'Unauthorized'});
       }
 
+      // Check for 403 Forbidden - banned user
+      if (response.statusCode == 403) {
+        final banReason = response.data['banReason'] as String?;
+        _handleBannedUser(banReason);
+        return StateReturnData(3, response.data);
+      }
+
       if (response.statusCode! >= 200 && response.statusCode! <= 202) {
         return StateReturnData(1, response.data);
       }
@@ -90,6 +163,12 @@ class ApiService {
         // Check for 401 Unauthorized
         if (e.response?.statusCode == 401) {
           _handleUnauthorized();
+        }
+        // Check for 403 Forbidden - banned user
+        if (e.response?.statusCode == 403) {
+          final banReason = e.response?.data['banReason'] as String?;
+          _handleBannedUser(banReason);
+          return StateReturnData(3, e.response?.data ?? {});
         }
         print('DioError: ${e.response?.data}');
         print('DioError status: ${e.response?.statusCode}');
@@ -118,6 +197,13 @@ class ApiService {
         return StateReturnData(3, {'message': 'Unauthorized'});
       }
 
+      // Check for 403 Forbidden - banned user
+      if (response.statusCode == 403) {
+        final banReason = response.data['banReason'] as String?;
+        _handleBannedUser(banReason);
+        return StateReturnData(3, response.data);
+      }
+
       if (response.statusCode! >= 200 && response.statusCode! <= 202) {
         return StateReturnData(1, response.data); // إرجاع البيانات كـ Map
       }
@@ -127,6 +213,12 @@ class ApiService {
         // Check for 401 Unauthorized
         if (e.response?.statusCode == 401) {
           _handleUnauthorized();
+        }
+        // Check for 403 Forbidden - banned user
+        if (e.response?.statusCode == 403) {
+          final banReason = e.response?.data['banReason'] as String?;
+          _handleBannedUser(banReason);
+          return StateReturnData(3, e.response?.data ?? {});
         }
       }
       print('Error in Update request: $e');
@@ -144,6 +236,13 @@ class ApiService {
         return StateReturnData(3, {'message': 'Unauthorized'});
       }
 
+      // Check for 403 Forbidden - banned user
+      if (response.statusCode == 403) {
+        final banReason = response.data['banReason'] as String?;
+        _handleBannedUser(banReason);
+        return StateReturnData(3, response.data);
+      }
+
       if (response.statusCode! >= 200 && response.statusCode! <= 202) {
         return StateReturnData(1, response.data); // إرجاع البيانات كـ Map
       }
@@ -153,6 +252,12 @@ class ApiService {
         // Check for 401 Unauthorized
         if (e.response?.statusCode == 401) {
           _handleUnauthorized();
+        }
+        // Check for 403 Forbidden - banned user
+        if (e.response?.statusCode == 403) {
+          final banReason = e.response?.data['banReason'] as String?;
+          _handleBannedUser(banReason);
+          return StateReturnData(3, e.response?.data ?? {});
         }
       }
       print('Error in DELETE request: $e');
