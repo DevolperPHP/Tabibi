@@ -3,8 +3,8 @@ import 'dart:math' as logger;
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/state_manager.dart';
-import 'package:my_doctor/routes/app_routes.dart';
-import 'package:my_doctor/views/widgets/message_snak.dart';
+import 'package:tabibi/routes/app_routes.dart';
+import 'package:tabibi/views/widgets/message_snak.dart';
 
 import '../data/models/case_model.dart';
 import '../data/models/category.dart';
@@ -52,6 +52,37 @@ class DoctorCaseController extends GetxController {
     categorySelect.value = null;
     fetchDataCases();
   }
+
+  // Manual refresh method for the "الحالات" screen
+  Future<void> refreshCases() async {
+    print('🔄 [DoctorCaseController] Manual refresh triggered');
+    
+    // Prevent double loading
+    if (isLoading.value) {
+      print('⏳ [DoctorCaseController] Already loading, skipping refresh');
+      return;
+    }
+    
+    // Set loading state once for the entire refresh operation
+    isLoading(true);
+    
+    try {
+      // Load available cases first
+      await fetchDataCases();
+      print('✅ [DoctorCaseController] Available cases refreshed');
+      
+      // Then load my cases with a small delay to avoid conflicts
+      await Future.delayed(Duration(milliseconds: 500));
+      await fetchDataOmeCases();
+      print('✅ [DoctorCaseController] My cases refreshed');
+      
+      print('🎉 [DoctorCaseController] Full refresh completed successfully');
+    } catch (e) {
+      print('❌ [DoctorCaseController] Error during refresh: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
   
   bool get hasActiveFilters {
     return genderFilter.value != 'all' ||
@@ -92,8 +123,10 @@ class DoctorCaseController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchDataCases();
-    fetchDataOmeCases();
+    print('🏥 [DoctorCaseController] Initializing controller...');
+    
+    // Don't auto-load here to avoid double loading
+    // Data will be loaded when screens request it
   }
 
   RxBool isOme = RxBool(false);
@@ -116,7 +149,8 @@ class DoctorCaseController extends GetxController {
 
 //Cases
   Future<void> fetchDataCases() async {
-    isLoading(true);
+    print('📋 [DoctorCaseController] Fetching available cases...');
+    // Don't set loading state here - it's handled by refreshCases method
 
     try {
       String apiCases = ApiConstants.doctorCases;
@@ -130,35 +164,73 @@ class DoctorCaseController extends GetxController {
         }
       }
 
+      print('🌐 [DoctorCaseController] API Endpoint: $apiCases');
       final StateReturnData response = await ApiService.getData(apiCases);
 
+      print('📊 [DoctorCaseController] Cases Response Status: ${response.isStateSucess}');
+      
       if (response.isStateSucess < 3) {
-        List<CaseModel> newCases =
-            CaseModel.fromJsonList(response.data['cases']);
-        allDoctorCases([]);
-        allDoctorCases.addAll(newCases);
+        print('📊 [DoctorCaseController] Response data type: ${response.data.runtimeType}');
         
-        // Extract available zones from cases
-        _extractAvailableZones(newCases);
-        
-        applyFilters();
-        //
-        if (categores.isEmpty) {
-          isLoadingCategory(true);
-          List<Category> newCategory =
-              Category.fromJsonList(response.data['category']);
+        // Check if response has the expected structure
+        if (response.data is Map<String, dynamic> && 
+            response.data.containsKey('cases') && 
+            response.data.containsKey('category')) {
+          
+          List<CaseModel> newCases = CaseModel.fromJsonList(response.data['cases']);
+          print('📈 [DoctorCaseController] Parsed ${newCases.length} available cases');
+          
+          allDoctorCases([]);
+          allDoctorCases.addAll(newCases);
+          
+          // Extract available zones from cases
+          _extractAvailableZones(newCases);
+          
+          applyFilters();
+          
+          // Load categories if not already loaded
+          if (categores.isEmpty) {
+            isLoadingCategory(true);
+            List<Category> newCategory = Category.fromJsonList(response.data['category']);
+            print('📂 [DoctorCaseController] Loaded ${newCategory.length} categories');
 
-          categores.add(Category(id: '', name: 'جميع الفئات'));
-          categores.addAll(newCategory);
+            categores.add(Category(id: '', name: 'جميع الفئات'));
+            categores.addAll(newCategory);
+          }
+          
+          print('✅ [DoctorCaseController] Available cases loaded successfully');
+          
+        } else {
+          print('❌ [DoctorCaseController] Unexpected response format');
+          print('📊 [DoctorCaseController] Response data: ${response.data}');
+          
+          // Try to parse as direct list (fallback)
+          if (response.data is List) {
+            List<CaseModel> newCases = CaseModel.fromJsonList(response.data);
+            allDoctorCases([]);
+            allDoctorCases.addAll(newCases);
+            applyFilters();
+            print('✅ [DoctorCaseController] Loaded ${newCases.length} cases (fallback)');
+          } else {
+            print('❌ [DoctorCaseController] Cannot parse response data');
+            allDoctorCases([]);
+          }
         }
+      } else {
+        print('❌ [DoctorCaseController] API request failed with status: ${response.isStateSucess}');
+        print('📊 [DoctorCaseController] Error response: ${response.data}');
+        allDoctorCases([]);
       }
-    } catch (e) {
-      // MessageSnak.message("خطأ في تحميل البيانات: $e");
-      print("خطأ في تحميل البيانات: $e");
+    } catch (e, stackTrace) {
+      print('❌ [DoctorCaseController] Error fetching cases: $e');
+      print('🔍 [DoctorCaseController] Stack trace: $stackTrace');
+      allDoctorCases([]);
+      // Don't show error to user for network issues
     }
 
-    isLoading.value = false;
+    // Don't set loading state here - it's handled by refreshCases method
     isLoadingCategory.value = false;
+    print('🏁 [DoctorCaseController] fetchDataCases completed');
   }
 
 //Take Case
@@ -191,7 +263,7 @@ class DoctorCaseController extends GetxController {
 
 //Ome  Cases
   Future<void> fetchDataOmeCases() async {
-    isLoading(true);
+    // Don't set loading state here - it's handled by refreshCases method
 
     try {
       final StateReturnData response =
@@ -202,8 +274,9 @@ class DoctorCaseController extends GetxController {
       print("📱 My Cases Status: ${response.isStateSucess}");
       
       if (response.isStateSucess < 3) {
-        // Backend returns array directly, not wrapped in object
+        // Handle different response types gracefully
         if (response.data is List) {
+          // Normal case: backend returns a list
           List<CaseModel> newCases = CaseModel.fromJsonList(response.data);
           doctorOmeCases([]);
           doctorOmeCases.addAll(newCases);
@@ -212,21 +285,58 @@ class DoctorCaseController extends GetxController {
           if (newCases.isNotEmpty) {
             print("📄 First case: ${newCases[0].name}, Status: ${newCases[0].status}, Doctor: ${newCases[0].doctor}");
           }
+        } else if (response.data is Map<String, dynamic>) {
+          // Handle error responses or different API formats
+          final dataMap = response.data as Map<String, dynamic>;
+          
+          if (dataMap.containsKey('message')) {
+            // This is likely an error message (like "Access denied")
+            final message = dataMap['message'];
+            if (message.toString().contains('Access denied') || 
+                message.toString().contains('No token')) {
+              print("🔐 Authentication error - clearing cases list");
+              doctorOmeCases([]);
+              // Don't show error for auth issues, just clear the list
+              return;
+            } else {
+              print("❌ API returned error message: $message");
+              MessageSnak.message("خطأ في تحميل الحالات: $message");
+            }
+          } else {
+            print("❌ Unknown response format: ${response.data}");
+            MessageSnak.message("خطأ في تنسيق البيانات");
+          }
         } else {
-          print("❌ Response is not a list: ${response.data}");
-          MessageSnak.message("خطأ في تنسيق البيانات");
+          print("❌ Unexpected response type: ${response.data.runtimeType}");
+          print("📊 Response content: ${response.data}");
+          
+          // Check if it's an authentication error by content
+          final dataStr = response.data.toString().toLowerCase();
+          if (dataStr.contains('access denied') || 
+              dataStr.contains('no token') || 
+              dataStr.contains('unauthorized')) {
+            print("🔐 Authentication error detected - clearing cases");
+            doctorOmeCases([]);
+            return;
+          } else {
+            MessageSnak.message("خطأ في تحميل الحالات");
+          }
         }
       } else {
         print("❌ Request failed with status: ${response.isStateSucess}");
+        print("📊 Error response: ${response.data}");
         MessageSnak.message("فشل في تحميل الحالات");
       }
     } catch (e, stackTrace) {
-      MessageSnak.message("خطأ في تحميل الحالات: $e");
       print("❌ Error loading My Cases: $e");
       print("Stack trace: $stackTrace");
+      
+      // Don't show user-facing error for network issues, just log
+      doctorOmeCases([]);
+      print("🔄 Cleared cases list due to error");
     }
 
-    isLoading.value = false;
+    // Don't set loading state here - it's handled by refreshCases method
   }
 
 //Mark Case as Done with confirmation

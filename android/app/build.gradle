@@ -4,11 +4,13 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-// Google Services plugin configuration
-apply plugin: "com.google.gms.google-services"
+// Google Services plugin configuration - only apply for debug builds
+if (project.hasProperty('enableFirebase') && project.property('enableFirebase') == 'true') {
+    apply plugin: "com.google.gms.google-services"
+}
 
 android {
-    namespace = "com.example.my_doctor"
+    namespace = "com.tabibi.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
@@ -24,7 +26,7 @@ android {
     defaultConfig {
         multiDexEnabled true
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.my_doctor"
+        applicationId = "com.tabibi.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -33,16 +35,25 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        release {
+            storeFile file('../release.keystore')
+            storePassword 'tabibi123'
+            keyAlias 'tabibi'
+            keyPassword 'tabibi123'
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            // Signing with the release keys.
+            signingConfig = signingConfigs.release
 
-            // Temporarily disable ProGuard to test
-            // minifyEnabled true
-            // shrinkResources true
-            // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Enable ProGuard and resource shrinking for release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

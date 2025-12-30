@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:my_doctor/controllers/request_doctor_role_controller.dart'
+import 'package:tabibi/controllers/request_doctor_role_controller.dart'
     show RequestDoctorRoleController;
 
 import '../controllers/admin_controller.dart';

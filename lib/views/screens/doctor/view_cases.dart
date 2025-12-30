@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/utils/constants/style_app.dart';
+import 'package:tabibi/utils/constants/style_app.dart';
 
 import '../../../controllers/doctor_case_controller.dart';
 import '../../../data/models/case_model.dart';
@@ -16,17 +16,72 @@ import '../../widgets/modern/advanced_filter_panel.dart';
 import '../../widgets/gender_profile_icon.dart';
 
 
-class ViewCases extends StatelessWidget {
+class ViewCases extends StatefulWidget {
   ViewCases({super.key});
-  DoctorCaseController doctorCaseController = Get.find<DoctorCaseController>();
+  
+  @override
+  State<ViewCases> createState() => _ViewCasesState();
+}
+
+class _ViewCasesState extends State<ViewCases> with WidgetsBindingObserver {
+  final DoctorCaseController doctorCaseController = Get.find<DoctorCaseController>();
+  bool _isInitialized = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    print('🔄 [ViewCases] Init State - will auto-load on first build');
+    
+    // Mark as not initialized, will load data once when screen opens
+  }
+  
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && mounted) {
+      print('🔄 [ViewCases] App resumed - checking if refresh needed');
+      // Only refresh if we have data and it's been a while since last refresh
+      if (doctorCaseController.doctorCases.isNotEmpty && 
+          doctorCaseController.isLoading.value == false) {
+        print('🔄 [ViewCases] Refreshing data on app resume');
+        _loadDataOnce();
+      }
+    }
+  }
+  
+  // Single data loading method to prevent double loading
+  void _loadDataOnce() {
+    if (!_isInitialized && 
+        !doctorCaseController.isLoading.value && 
+        doctorCaseController.doctorCases.isEmpty) {
+      _isInitialized = true;
+      print('🔄 [ViewCases] Loading data once - initialization complete');
+      doctorCaseController.refreshCases().then((_) {
+        // Mark initialization complete after loading finishes
+        _isInitialized = false; // Reset for next time screen is visited
+      });
+    }
+  }
   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFF5F7FA),
-      body: Obx(() => doctorCaseController.isLoading.value
-        ? _buildLoadingState()
-        : _buildContent()),
+      body: Obx(() {
+        // Only load data once when screen first opens
+        _loadDataOnce();
+        
+        return doctorCaseController.isLoading.value
+          ? _buildLoadingState()
+          : _buildContent();
+      }),
     );
   }
   
@@ -55,8 +110,13 @@ class ViewCases extends StatelessWidget {
     return RefreshIndicator(
       displacement: 40.0,
       onRefresh: () async {
-        await doctorCaseController.fetchDataCases();
-        await doctorCaseController.fetchDataOmeCases();
+        print('🔄 [ViewCases] Pull-to-refresh triggered');
+        // Don't call refresh if already loading
+        if (!doctorCaseController.isLoading.value) {
+          await doctorCaseController.refreshCases();
+        } else {
+          print('⏳ [ViewCases] Already loading, skipping refresh');
+        }
       },
       color: ModernTheme.primaryBlue,
       child: ListView(

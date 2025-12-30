@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/controllers/storage_controller.dart';
-import 'package:my_doctor/utils/constants/color_app.dart';
+import 'package:tabibi/controllers/storage_controller.dart';
+import 'package:tabibi/utils/constants/color_app.dart';
 
 import '../data/models/profile_model.dart';
 import '../routes/app_routes.dart';

@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:my_doctor/routes/app_routes.dart';
-import 'package:my_doctor/views/widgets/message_snak.dart';
+import 'package:tabibi/routes/app_routes.dart';
+import 'package:tabibi/views/widgets/message_snak.dart';
 import '../data/models/role_lists.dart';
 import '../services/api_service.dart';
 import '../utils/constants/api_constants.dart';

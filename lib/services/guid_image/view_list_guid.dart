@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/utils/constants/style_app.dart';
-import 'package:my_doctor/utils/design_system/modern_theme.dart';
+import 'package:tabibi/utils/constants/style_app.dart';
+import 'package:tabibi/utils/design_system/modern_theme.dart';
 import '../../controllers/case_controller.dart';
 import '../../data/models/instruction_model.dart';
 import '../../utils/constants/color_app.dart';

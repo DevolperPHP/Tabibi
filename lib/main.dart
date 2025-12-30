@@ -81,6 +81,16 @@ Future<void> _initializeApp() async {
       if (userData != null) {
         await StorageController.updateUserData(userData);
         print('✅ User data loaded');
+        
+        // Save FCM token after successful profile load (user is logged in)
+        try {
+          if (Firebase.apps.isNotEmpty) {
+            await FCMNotificationService.saveTokenAfterLogin();
+            print('✅ FCM token saved after login');
+          }
+        } catch (fcmError) {
+          print('⚠️  FCM token save error (non-critical): $fcmError');
+        }
       }
     } catch (e) {
       print('❌ Profile fetch error: $e');
@@ -92,7 +102,6 @@ Future<void> _initializeApp() async {
       // Only initialize FCM if Firebase is already initialized
       if (Firebase.apps.isNotEmpty) {
         await FCMNotificationService.initialize();
-        FCMNotificationService.refreshToken();
         print('✅ FCM initialized successfully');
       }
     } catch (e) {

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:my_doctor/data/models/notification_model.dart';
-import 'package:my_doctor/services/api_service.dart';
-import 'package:my_doctor/utils/constants/api_constants.dart';
+import 'package:tabibi/data/models/notification_model.dart';
+import 'package:tabibi/services/api_service.dart';
+import 'package:tabibi/utils/constants/api_constants.dart';
 
 class NotificationService {
   static Future<List<NotificationModel>> getNotifications(String userId) async {

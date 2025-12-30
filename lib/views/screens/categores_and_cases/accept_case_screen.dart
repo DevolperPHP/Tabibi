@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/utils/validators.dart';
-import 'package:my_doctor/views/widgets/common/loading_indicator.dart';
+import 'package:tabibi/utils/validators.dart';
+import 'package:tabibi/views/widgets/common/loading_indicator.dart';
 import '../../../controllers/category_controller.dart';
 import '../../../data/models/category.dart';
 import '../../../utils/constants/color_app.dart';

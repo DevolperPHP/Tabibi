@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/routes/app_routes.dart';
+import 'package:tabibi/routes/app_routes.dart';
 import '../../../controllers/category_controller.dart';
 import '../../../data/models/case_model.dart';
 import '../../../utils/constants/color_app.dart';

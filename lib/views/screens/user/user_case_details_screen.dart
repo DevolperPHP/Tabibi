@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/controllers/case_controller.dart';
-import 'package:my_doctor/controllers/home_controller.dart';
-import 'package:my_doctor/controllers/profile_controller.dart';
-import 'package:my_doctor/data/models/profile_model.dart';
-import 'package:my_doctor/routes/app_routes.dart';
-import 'package:my_doctor/services/api_service.dart';
-import 'package:my_doctor/utils/constants/color_app.dart';
-import 'package:my_doctor/utils/design_system/modern_theme.dart';
-import 'package:my_doctor/views/widgets/message_snak.dart';
-import 'package:my_doctor/views/widgets/zoomable_image_viewer.dart';
+import 'package:tabibi/controllers/case_controller.dart';
+import 'package:tabibi/controllers/home_controller.dart';
+import 'package:tabibi/controllers/profile_controller.dart';
+import 'package:tabibi/data/models/profile_model.dart';
+import 'package:tabibi/routes/app_routes.dart';
+import 'package:tabibi/services/api_service.dart';
+import 'package:tabibi/utils/constants/color_app.dart';
+import 'package:tabibi/utils/design_system/modern_theme.dart';
+import 'package:tabibi/views/widgets/message_snak.dart';
+import 'package:tabibi/views/widgets/zoomable_image_viewer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:my_doctor/utils/constants/api_constants.dart';
+import 'package:tabibi/utils/constants/api_constants.dart';
 
 class UserCaseDetailsScreen extends StatefulWidget {
   const UserCaseDetailsScreen({super.key});

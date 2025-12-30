@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/views/widgets/common/loading_indicator.dart';
-import 'package:my_doctor/views/widgets/input_text.dart';
+import 'package:tabibi/views/widgets/common/loading_indicator.dart';
+import 'package:tabibi/views/widgets/input_text.dart';
 
 import '../../../controllers/category_controller.dart';
 import '../../../../utils/validators.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/views/widgets/common/loading_indicator.dart';
+import 'package:tabibi/views/widgets/common/loading_indicator.dart';
 
 import '../../../controllers/request_admin_role_controller.dart';
 import '../../../data/models/role_lists.dart';

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/utils/constants/style_app.dart';
+import 'package:tabibi/utils/constants/style_app.dart';
 
 import '../../../controllers/doctor_case_controller.dart';
 import '../../../data/models/case_model.dart';
@@ -29,7 +29,7 @@ class OmnCases extends StatelessWidget {
                 LoadingIndicator(),
                 SizedBox(height: 16),
                 Text(
-                  'جاري تحميل الحالات...',
+                  'جاري تحميل حالاتي...',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
@@ -58,10 +58,18 @@ class OmnCases extends StatelessWidget {
                     ),
                     SizedBox(height: 12),
                     Text(
-                      'الحالات المكتملة ستظهر هنا',
+                      'حالاتك المكتملة والجارى علاجها ستظهر هنا',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'اسحب لأسفل للتحديث',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[500],
                       ),
                     ),
                   ],
@@ -69,7 +77,13 @@ class OmnCases extends StatelessWidget {
               )
             : RefreshIndicator(
                 onRefresh: () async {
-                  await doctorCaseController.fetchDataOmeCases();
+                  print('🔄 [OmnCases] Pull-to-refresh triggered');
+                  // Use the improved refreshCases method to prevent double loading
+                  if (!doctorCaseController.isLoading.value) {
+                    await doctorCaseController.refreshCases();
+                  } else {
+                    print('⏳ [OmnCases] Already loading, skipping refresh');
+                  }
                 },
                 color: ModernTheme.primaryBlue,
                 child: ListView(

@@ -14,10 +14,9 @@ class ApiService {
       receiveTimeout: const Duration(seconds: 10),
       headers: {
         'Accept': 'application/json',
+        'Content-Type': 'application/json',
         if (StorageController.checkLoginStatus())
           'Authorization': 'Bearer ${StorageController.getToken()}',
-        // 'Content-Type': 'multipart/form-data',
-        // 'Content-Type': 'application/json',
       },
     ),
   );
@@ -48,8 +47,9 @@ class ApiService {
   // دالة POST لإرسال البيانات وإرجاع النتيجة كـ Map
   static Future<StateReturnData> postData(String endpoint, dynamic data) async {
     try {
-      // FormData formData = FormData.fromMap(data);
-      final response = await _dio.post(endpoint, data: data);
+      // Ensure data is properly formatted for JSON
+      final jsonData = data is Map ? data : {'data': data};
+      final response = await _dio.post(endpoint, data: jsonData);
       print(response.data);
       print('State Code : ${response.statusCode}');
 

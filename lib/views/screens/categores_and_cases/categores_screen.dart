@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/utils/constants/style_app.dart';
+import 'package:tabibi/utils/constants/style_app.dart';
 
 import '../../../controllers/category_controller.dart';
 import '../../../data/models/category.dart';

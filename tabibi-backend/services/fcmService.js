@@ -3,26 +3,58 @@ const path = require('path');
 
 // Initialize Firebase Admin SDK
 let serviceAccount;
+let firebaseInitialized = false;
 
 try {
-  // Try to load from environment variable path
+  // Try to load from environment variable path first
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     serviceAccount = require(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+    console.log('🔑 Loaded Firebase credentials from environment variable');
   } else {
     // Try to load from default location
-    serviceAccount = require(path.join(__dirname, '../config/serviceAccountKey.json'));
+    try {
+      serviceAccount = require(path.join(__dirname, '../config/serviceAccountKey.json'));
+      console.log('🔑 Loaded Firebase credentials from config/serviceAccountKey.json');
+    } catch (error) {
+      // Try template file for development
+      try {
+        serviceAccount = require(path.join(__dirname, '../config/serviceAccountKey-template.json'));
+        if (serviceAccount.private_key.includes('REPLACE_WITH_')) {
+          console.warn('⚠️  Using template service account file. Please replace with actual Firebase credentials.');
+          console.warn('📋 To get your service account key:');
+          console.warn('   1. Go to https://console.firebase.google.com/');
+          console.warn('   2. Select your project: tabibi-d938a');
+          console.warn('   3. Go to Project Settings > Service Accounts');
+          console.warn('   4. Generate new private key and save as config/serviceAccountKey.json');
+          serviceAccount = null;
+        } else {
+          console.log('🔑 Loaded Firebase credentials from template file');
+        }
+      } catch (templateError) {
+        console.warn('⚠️  No Firebase service account key found.');
+        console.warn('📋 To enable notifications:');
+        console.warn('   1. Go to https://console.firebase.google.com/project/tabibi-d938a/settings/serviceaccounts');
+        console.warn('   2. Generate new private key');
+        console.warn('   3. Save the JSON file as config/serviceAccountKey.json');
+        serviceAccount = null;
+      }
+    }
   }
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-  console.log('Firebase Admin initialized successfully');
+  if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    console.log('✅ Firebase Admin initialized successfully');
+    firebaseInitialized = true;
+  } else {
+    admin.initializeApp(); // Initialize with default credentials
+    console.log('ℹ️  Firebase Admin initialized with default credentials (notifications may not work)');
+  }
 } catch (error) {
-  console.error('Error initializing Firebase Admin:', error.message);
-  console.log('Please make sure you have:');
-  console.log('1. Downloaded the service account key from Firebase Console');
-  console.log('2. Saved it as config/serviceAccountKey.json');
-  console.log('3. Or set GOOGLE_APPLICATION_CREDENTIALS environment variable');
+  console.error('❌ Error initializing Firebase Admin:', error.message);
+  admin.initializeApp();
+  console.log('ℹ️  Firebase Admin initialized without credentials (notifications disabled)');
 }
 
 class FCMService {
@@ -35,6 +67,13 @@ class FCMService {
    */
   static async sendToDevice(token, title, body, data = {}) {
     try {
+      // Check if Firebase is properly initialized
+      if (!firebaseInitialized) {
+        console.warn('⚠️  Firebase not initialized. Skipping notification send.');
+        console.log('📱 Notification would have been:', { title, body, token: token?.substring(0, 10) + '...' });
+        return { success: false, error: 'Firebase not initialized' };
+      }
+
       const message = {
         notification: {
           title: title,
@@ -44,11 +83,14 @@ class FCMService {
         token: token,
       };
 
+      console.log('📤 Sending FCM notification to:', token?.substring(0, 10) + '...');
+      console.log('📱 Message:', { title, body, data });
+
       const response = await admin.messaging().send(message);
-      console.log('Successfully sent message:', response);
+      console.log('✅ Successfully sent message:', response);
       return { success: true, messageId: response };
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
       return { success: false, error: error.message };
     }
   }
@@ -62,6 +104,13 @@ class FCMService {
    */
   static async sendToMultipleDevices(tokens, title, body, data = {}) {
     try {
+      // Check if Firebase is properly initialized
+      if (!firebaseInitialized) {
+        console.warn('⚠️  Firebase not initialized. Skipping bulk notification send.');
+        console.log('📱 Bulk notification would have been sent to', tokens.length, 'devices:', { title, body });
+        return { success: false, error: 'Firebase not initialized', successCount: 0, failureCount: tokens.length };
+      }
+
       const message = {
         notification: {
           title: title,
@@ -71,8 +120,11 @@ class FCMService {
         tokens: tokens,
       };
 
+      console.log('📤 Sending FCM notification to', tokens.length, 'devices');
+      console.log('📱 Message:', { title, body, data });
+
       const response = await admin.messaging().sendMulticast(message);
-      console.log('Successfully sent messages:', response.successCount, 'successes,', response.failureCount, 'failures');
+      console.log('✅ Successfully sent messages:', response.successCount, 'successes,', response.failureCount, 'failures');
 
       if (response.failureCount > 0) {
         const failedTokens = [];
@@ -91,7 +143,7 @@ class FCMService {
         messageId: response.responses[0]?.messageId,
       };
     } catch (error) {
-      console.error('Error sending messages:', error);
+      console.error('❌ Error sending messages:', error);
       return { success: false, error: error.message };
     }
   }

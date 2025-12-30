@@ -4,6 +4,7 @@ const Case = require("../../model/Case");
 const User = require("../../model/User");
 const moment = require("moment");
 const Notification = require("../../model/Notification");
+const FCMService = require("../../services/fcmService");
 
 router.post("/callback", async (req, res) => {
   try {
@@ -42,15 +43,45 @@ router.post("/callback", async (req, res) => {
       );
       console.log("✅ Case updated (Approved):", result);
 
-      // Send notification to user about doctor acceptance
+      // Send notification to user about doctor taking the case
       if (caseData) {
+        console.log("📨 Sending notification to patient:", caseData.userId);
+        
+        const notificationTitle = '👨‍⚕️ طبيب اختار حالتك!';
+        const notificationBody = `الدكتور ${doctor?.name || 'طبيب'} اختار حالتك وسيبدأ العلاج قريباً 🦷✨`;
+        
+        // Save notification to database
         await Notification.create({
           userId: caseData.userId,
-          title: '📍 تم حجز موعدك مع طبيب بنجاح',
-          body: 'نتطلع لرؤيتك قريبًا، ونتمنى لك تجربة علاجية سهلة و مريحة 😁🦷',
+          title: notificationTitle,
+          body: notificationBody,
           type: 'case_taken',
           relatedId: caseId,
         });
+        console.log("✅ Notification saved to database");
+
+        // Send FCM push notification to patient
+        const patient = await User.findById(caseData.userId);
+        if (patient && patient.fcmToken) {
+          console.log("� Sending FCM push notification to patient...");
+          try {
+            const fcmResult = await FCMService.sendToDevice(
+              patient.fcmToken,
+              notificationTitle,
+              notificationBody,
+              {
+                type: 'case_taken',
+                relatedId: caseId,
+                doctorName: doctor?.name || 'طبيب',
+              }
+            );
+            console.log("✅ FCM notification sent successfully:", fcmResult);
+          } catch (fcmError) {
+            console.error("❌ Failed to send FCM notification:", fcmError);
+          }
+        } else {
+          console.warn("⚠️  Patient has no FCM token, notification saved to DB only");
+        }
       }
     } else {
       const result = await Case.updateOne(

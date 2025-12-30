@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:my_doctor/routes/app_routes.dart';
+import 'package:tabibi/routes/app_routes.dart';
 
 import '../../../controllers/profile_controller.dart';
 import '../../../controllers/case_controller.dart';

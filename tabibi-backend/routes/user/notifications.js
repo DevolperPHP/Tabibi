@@ -7,6 +7,57 @@ const FCMService = require('../../services/fcmService');
 
 router.use(getUser);
 
+// Test endpoint to send a test notification
+router.post('/test', async (req, res) => {
+    try {
+        const { userId, title, body } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ msg: "userId is required" });
+        }
+
+        console.log('🧪 Testing notification for user:', userId);
+        console.log('📱 Title:', title || 'Test Notification');
+        console.log('📝 Body:', body || 'This is a test notification from Tabibi app');
+
+        // Get user's FCM token
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ msg: "User not found" });
+        }
+
+        if (!user.fcmToken) {
+            return res.status(400).json({ 
+                msg: "User has no FCM token saved", 
+                userId: userId 
+            });
+        }
+
+        console.log('🔑 FCM Token found:', user.fcmToken.substring(0, 10) + '...');
+
+        // Send test notification
+        const result = await FCMService.sendToDevice(
+            user.fcmToken, 
+            title || 'Test Notification', 
+            body || 'This is a test notification from Tabibi app',
+            {
+                type: 'test',
+                testId: Date.now().toString(),
+            }
+        );
+
+        res.json({
+            msg: "Test notification sent",
+            result: result,
+            userId: userId,
+            fcmToken: user.fcmToken.substring(0, 10) + '...'
+        });
+    } catch (err) {
+        console.log('❌ Error sending test notification:', err);
+        res.status(500).json({ msg: "Error sending test notification", error: err.message });
+    }
+});
+
 // Get notifications for a user
 router.get('/:userId', async (req, res) => {
     try {

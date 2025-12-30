@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/data/models/notification_model.dart';
-import 'package:my_doctor/services/notification_service.dart';
-import 'package:my_doctor/views/widgets/message_snak.dart';
-import 'package:my_doctor/controllers/storage_controller.dart';
+import 'package:tabibi/data/models/notification_model.dart';
+import 'package:tabibi/services/notification_service.dart';
+import 'package:tabibi/views/widgets/message_snak.dart';
+import 'package:tabibi/controllers/storage_controller.dart';
 
 class NotificationController extends GetxController {
   final RxList<NotificationModel> notifications = RxList<NotificationModel>([]);

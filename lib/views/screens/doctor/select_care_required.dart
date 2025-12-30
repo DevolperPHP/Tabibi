@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/routes/app_routes.dart';
+import 'package:tabibi/routes/app_routes.dart';
 import '../../../controllers/case_controller.dart';
 import '../../../utils/design_system/modern_theme.dart';
 import '../../widgets/modern/modern_button.dart';

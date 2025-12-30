@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/controllers/notification_controller.dart';
-import 'package:my_doctor/services/api_service.dart';
-import 'package:my_doctor/utils/constants/api_constants.dart';
-import 'package:my_doctor/views/widgets/message_snak.dart';
+import 'package:tabibi/controllers/notification_controller.dart';
+import 'package:tabibi/services/api_service.dart';
+import 'package:tabibi/utils/constants/api_constants.dart';
+import 'package:tabibi/views/widgets/message_snak.dart';
 
 class HealthTipsScreen extends StatefulWidget {
   const HealthTipsScreen({super.key});

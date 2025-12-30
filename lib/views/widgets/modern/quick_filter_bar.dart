@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:my_doctor/data/models/category.dart';
-import 'package:my_doctor/utils/design_system/modern_theme.dart';
+import 'package:tabibi/data/models/category.dart';
+import 'package:tabibi/utils/design_system/modern_theme.dart';
 
 class QuickFilterBar extends StatelessWidget {
   final List<String> availableZones;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/views/widgets/common/loading_indicator.dart';
+import 'package:tabibi/views/widgets/common/loading_indicator.dart';
 
 import '../../../controllers/profile_controller.dart';
 import '../../../utils/constants/modern_theme.dart';

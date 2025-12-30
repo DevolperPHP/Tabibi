@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/routes/app_routes.dart';
+import 'package:tabibi/routes/app_routes.dart';
 import '../../../controllers/admin_controller.dart';
 import '../../../data/models/post_model.dart';
 import '../../../utils/design_system/modern_theme.dart';

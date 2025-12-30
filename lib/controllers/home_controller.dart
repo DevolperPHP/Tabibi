@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:my_doctor/controllers/storage_controller.dart';
+import 'package:tabibi/controllers/storage_controller.dart';
 
 import '../data/models/post_model.dart';
 import '../services/api_service.dart';
@@ -166,20 +166,63 @@ class HomeController extends GetxController {
     isLoading(true);
 
     try {
+      print('🏠 [HomeController] Starting to fetch home posts...');
+      print('🌐 [HomeController] API Endpoint: ${ApiConstants.baseUrl}${ApiConstants.homePost}');
+      
       final StateReturnData response =
           await ApiService.getData(ApiConstants.homePost);
 
+      print('📡 [HomeController] API Response received');
+      print('📊 [HomeController] Response state: ${response.isStateSucess}');
+      print('🔍 [HomeController] Response data type: ${response.data.runtimeType}');
+      
       if (response.isStateSucess < 3) {
-        List<Post> newPost = Post.fromJsonList(response.data);
+        print('📊 [HomeController] Raw API response: ${response.data}');
+        
+        // Handle empty response or null data
+        if (response.data == null) {
+          print('⚠️  [HomeController] No data received from home API (null response)');
+          posts([]);
+        } else if (response.data is List && response.data.isEmpty) {
+          print('📝 [HomeController] Received empty list from API');
+          posts([]);
+        } else {
+          print('🧩 [HomeController] Starting post parsing...');
+          try {
+            List<Post> newPost = Post.fromJsonList(response.data);
+            print('📈 [HomeController] Successfully parsed ${newPost.length} posts');
+            
+            posts([]);
+            posts.addAll(newPost);
+            
+            if (newPost.isNotEmpty) {
+              print('✅ [HomeController] Loaded ${newPost.length} posts successfully');
+              print('🎯 [HomeController] First post sample: ${newPost.first.toString()}');
+            } else {
+              print('ℹ️  [HomeController] No valid posts found in API response');
+            }
+          } catch (parseError) {
+            print('❌ [HomeController] Post parsing error: $parseError');
+            print('🔍 [HomeController] Error details: ${parseError.toString()}');
+            posts([]);
+          }
+        }
+      } else {
+        print('❌ [HomeController] Home API error: State ${response.isStateSucess}');
+        print('📊 [HomeController] Error response: ${response.data}');
         posts([]);
-        posts.addAll(newPost);
       }
     } catch (e) {
-      // MessageSnak.message("خطأ في تحميل البيانات: $e");
-      print("خطأ في تحميل البيانات: $e");
+      print('❌ [HomeController] Error fetching posts: $e');
+      print('🔍 [HomeController] Error type: ${e.runtimeType}');
+      print('📝 [HomeController] Error stack: ${e.toString()}');
+      posts([]);
+      // Show user-friendly error message
+      // MessageSnak.message("خطا في تحميل البيانات: $e");
     }
 
     isLoading.value = false;
+    print('🏁 [HomeController] fetchDataPosts() completed');
   }
 
   Widget getBody() => bodys[currentIndex.value].widget;

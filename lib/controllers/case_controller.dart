@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:my_doctor/views/widgets/message_snak.dart';
+import 'package:tabibi/views/widgets/message_snak.dart';
 import 'package:dio/dio.dart' as dio;
 import '../data/models/instruction_model.dart';
 import '../data/models/case_model.dart';
