@@ -80,8 +80,25 @@ router.post('/new', upload.any(), async (req, res) => {
             fileMap[file.fieldname] = file.filename;
         });
 
+        // Check if user has an active case
         if (req.user?.inCase === true) {
-            return res.status(400).json({ error: 'User already in case' });
+            // Verify there's actually a case in the database
+            const existingCase = await Case.findOne({ userId: req.user.id });
+            if (!existingCase) {
+                // No case found but inCase flag is true - reset the flag
+                console.log(`Resetting inCase flag for user ${req.user.id} - no case found in database`);
+                await User.updateOne({ _id: req.user.id }, { $set: { inCase: false } });
+            } else {
+                // Case exists - check if it's completed/cancelled
+                if (existingCase.status === 'done') {
+                    // Case is done but flag wasn't reset - fix it
+                    console.log(`Resetting inCase flag for user ${req.user.id} - case is already done`);
+                    await User.updateOne({ _id: req.user.id }, { $set: { inCase: false } });
+                } else {
+                    // Active case exists
+                    return res.status(400).json({ error: 'تم رفع حالة مسبقا و ما زال العمل عليها' });
+                }
+            }
         }
 
         const { name, age, phone, telegram, zone } = req.user

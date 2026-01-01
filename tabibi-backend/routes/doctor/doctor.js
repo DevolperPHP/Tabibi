@@ -91,44 +91,74 @@ router.get('/case/pay/:id', async (req, res) => {
         const caseData = await Case.findById(req.params.id);
         if (!caseData) return res.status(404).send('Case not found');
 
+        // Store doctor info in cart_id for retrieval in callback
+        // Format: caseId-doctorId-timestamp
+        const cartId = `${caseData._id}-${req.user.id}-${Date.now()}`;
+
         const payload = {
             profile_id: process.env.PAYTABS_PROFILE_ID,
             tran_type: 'sale',
             tran_class: 'ecom',
-            cart_id: `${caseData._id}-${Date.now()}`,
+            cart_id: cartId,
             cart_description: `Payment for case ${caseData._id}`,
             cart_currency: 'IQD',
             cart_amount: 10000, // set your case price
             callback: 'https://www.tabibi-iq.net/doctor/payment/callback',
-            return: 'http://165.232.78.163/doctor/payment/return',
-            customer_details: {
-                name: req.user.name,
-                email: req.user.email,
-                phone: req.user.phone,
-                country: 'IQ',
-                ip: req.ip
-            }
+            return: 'http://165.232.78.163/doctor/payment/return'
         };
 
-        const response = await axios.post(
-            `${process.env.PAYTABS_BASE_URL}/payment/request`,
-            payload,
-            {
-                headers: {
-                    Authorization: process.env.PAYTABS_SERVER_KEY, // your 32-char Mobile SDK key
-                    'Content-Type': 'application/json'
+        console.log('📤 PayTabs Request Payload:', JSON.stringify(payload, null, 2));
+        console.log('👨‍⚕️ Doctor ID:', req.user.id);
+
+        // PayTabs authorization format
+        const authHeaders = {
+            'Content-Type': 'application/json',
+            'Authorization': process.env.PAYTABS_SERVER_KEY,
+        };
+
+        console.log('🔑 Server Key (first 10 chars):', process.env.PAYTABS_SERVER_KEY?.substring(0, 10) + '...');
+        console.log('🌐 PayTabs Base URL:', process.env.PAYTABS_BASE_URL);
+        console.log('🆔 Profile ID:', process.env.PAYTABS_PROFILE_ID);
+
+        let response;
+        try {
+            response = await axios.post(
+                `${process.env.PAYTABS_BASE_URL}/payment/request`,
+                payload,
+                {
+                    headers: authHeaders,
+                    httpsAgent: agent
                 }
-            }
-        );
+            );
+        } catch (axiosError) {
+            console.error('❌ Axios Error Details:', {
+                status: axiosError.response?.status,
+                statusText: axiosError.response?.statusText,
+                data: axiosError.response?.data,
+                headers: axiosError.response?.headers
+            });
+            throw axiosError;
+        }
+
+        console.log('✅ PayTabs Response:', JSON.stringify(response.data, null, 2));
 
         // redirect user to PayTabs hosted page
         if (response.data.redirect_url) {
+            console.log('🔗 Redirecting to:', response.data.redirect_url);
             return res.redirect(response.data.redirect_url);
         }
 
+        // If payment page URL is in different format
+        if (response.data.payment_url) {
+            console.log('🔗 Redirecting to:', response.data.payment_url);
+            return res.redirect(response.data.payment_url);
+        }
+
+        console.error('❌ No redirect URL in response:', response.data);
         res.status(500).send('Unable to get payment redirect URL');
     } catch (err) {
-        console.error('Payment request error:', err.response?.data || err.message);
+        console.error('❌ Payment request error:', err.response?.data || err.message);
+        console.error('📊 Full error details:', JSON.stringify(err.response?.data || err, null, 2));
         res.status(500).send('Payment request failed');
     }
 });
@@ -204,7 +234,20 @@ router.get('/payment/return', (req, res) => {
 // -------------------------
 router.get('/my-cases', async (req, res) => {
     try {
+        console.log('👨‍⚕️ [My Cases] Doctor ID from token:', req.user.id);
+        console.log('🔍 [My Cases] Searching for cases with doctorId:', req.user.id);
+
         const caseData = await Case.find({ doctorId: req.user.id }).sort({ startSortedDate: -1 });
+
+        console.log('📊 [My Cases] Found cases:', caseData.length);
+        if (caseData.length > 0) {
+            console.log('📋 [My Cases] First case:', {
+                id: caseData[0]._id,
+                name: caseData[0].name,
+                doctorId: caseData[0].doctorId,
+                status: caseData[0].status
+            });
+        }
 
         // Enrich cases with user gender
         const enrichedCases = await Promise.all(
@@ -219,7 +262,8 @@ router.get('/my-cases', async (req, res) => {
 
         res.json(enrichedCases);
     } catch (err) {
-        console.log(err);
+        console.error('❌ [My Cases] Error:', err);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 

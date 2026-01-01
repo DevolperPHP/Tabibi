@@ -13,32 +13,51 @@ router.post("/callback", async (req, res) => {
 
     const paymentStatus = req.body.payment_result?.response_status;
     const paymentMessage = req.body.payment_result?.response_message;
-    const caseId = req.body.cart_id?.split("-")[0];
-    const doctorEmail = req.body.customer_details?.email;
+
+    // Parse cart_id: format is "caseId-doctorId-timestamp"
+    const cartId = req.body.cart_id;
+    const cartIdParts = cartId?.split("-");
+    const caseId = cartIdParts?.[0];
+    const doctorId = cartIdParts?.[1]; // Extract doctor ID from cart_id
 
     console.log("Payment Status:", paymentStatus);
     console.log("CaseId:", caseId);
-    console.log("Doctor Email:", doctorEmail);
+    console.log("Doctor ID from cart_id:", doctorId);
 
-    const doctor = await User.findOne({ email: doctorEmail });
+    // Find doctor by ID instead of email
+    const doctor = await User.findById(doctorId);
+
+    if (!doctor) {
+      console.error("❌ Doctor not found with ID:", doctorId);
+    } else {
+      console.log("✅ Doctor found:", {
+        id: doctor._id?.toString(),
+        name: doctor.name,
+        email: doctor.email
+      });
+    }
 
     if (paymentStatus === "A") {
       // Get case data before update to send notification
       const caseData = await Case.findOne({ _id: caseId });
 
+      const updateData = {
+        doctor: doctor?.name || "Unknown",
+        doctorId: doctor?._id?.toString() || doctorId, // Use doctorId from cart_id as fallback
+        doctorPhone: doctor?.phone || null,
+        doctorTelegram: doctor?.telegram || null,
+        doctorUni: doctor?.uni || null,
+        startDate: moment().locale("ar-kw").format("l"),
+        status: "in-treatment",
+        startSortedDate: Date.now().toString(),
+      };
+
+      console.log("📝 Update data:", JSON.stringify(updateData, null, 2));
+
       const result = await Case.updateOne(
         { _id: caseId },
         {
-          $set: {
-            doctor: doctor?.name || "Unknown",
-            doctorId: doctor?._id,
-            doctorPhone: doctor?.phone || null,
-            doctorTelegram: doctor?.telegram || null,
-            doctorUni: doctor?.uni || null,
-            startDate: moment().locale("ar-kw").format("l"),
-            status: "in-treatment",
-            startSortedDate: Date.now(),
-          },
+          $set: updateData
         }
       );
       console.log("✅ Case updated (Approved):", result);

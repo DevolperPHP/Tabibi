@@ -23,61 +23,63 @@ class ViewCases extends StatefulWidget {
   State<ViewCases> createState() => _ViewCasesState();
 }
 
-class _ViewCasesState extends State<ViewCases> with WidgetsBindingObserver {
+class _ViewCasesState extends State<ViewCases> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   final DoctorCaseController doctorCaseController = Get.find<DoctorCaseController>();
-  bool _isInitialized = false;
-  
+  bool _hasLoadedOnce = false;
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     print('🔄 [ViewCases] Init State - will auto-load on first build');
-    
-    // Mark as not initialized, will load data once when screen opens
+
+    // Load data immediately on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDataOnce();
+    });
   }
-  
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
-  
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed && mounted) {
       print('🔄 [ViewCases] App resumed - checking if refresh needed');
       // Only refresh if we have data and it's been a while since last refresh
-      if (doctorCaseController.doctorCases.isNotEmpty && 
+      if (doctorCaseController.doctorCases.isNotEmpty &&
           doctorCaseController.isLoading.value == false) {
         print('🔄 [ViewCases] Refreshing data on app resume');
-        _loadDataOnce();
+        doctorCaseController.refreshCases();
       }
     }
   }
-  
+
   // Single data loading method to prevent double loading
   void _loadDataOnce() {
-    if (!_isInitialized && 
-        !doctorCaseController.isLoading.value && 
-        doctorCaseController.doctorCases.isEmpty) {
-      _isInitialized = true;
+    if (!_hasLoadedOnce && !doctorCaseController.isLoading.value) {
+      _hasLoadedOnce = true;
       print('🔄 [ViewCases] Loading data once - initialization complete');
-      doctorCaseController.refreshCases().then((_) {
-        // Mark initialization complete after loading finishes
-        _isInitialized = false; // Reset for next time screen is visited
-      });
+      doctorCaseController.refreshCases();
     }
   }
   
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: Color(0xFFF5F7FA),
       body: Obx(() {
         // Only load data once when screen first opens
         _loadDataOnce();
-        
+
         return doctorCaseController.isLoading.value
           ? _buildLoadingState()
           : _buildContent();

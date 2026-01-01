@@ -11,17 +11,71 @@ import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/more_widgets.dart';
 import '../../widgets/gender_profile_icon.dart';
 
-class OmnCases extends StatelessWidget {
+class OmnCases extends StatefulWidget {
   OmnCases({super.key});
+
+  @override
+  State<OmnCases> createState() => _OmnCasesState();
+}
+
+class _OmnCasesState extends State<OmnCases> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   DoctorCaseController doctorCaseController = Get.find<DoctorCaseController>();
+  bool _hasLoadedOnce = false;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    print('🔄 [OmnCases] Init State - will auto-load on first build');
+
+    // Load data immediately on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDataOnce();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && mounted) {
+      print('🔄 [OmnCases] App resumed - checking if refresh needed');
+      // Only refresh if we have data and it's been a while since last refresh
+      if (doctorCaseController.doctorOmeCases.isNotEmpty &&
+          doctorCaseController.isLoading.value == false) {
+        print('🔄 [OmnCases] Refreshing data on app resume');
+        doctorCaseController.refreshCases();
+      }
+    }
+  }
+
+  // Single data loading method to prevent double loading
+  void _loadDataOnce() {
+    if (!_hasLoadedOnce && !doctorCaseController.isLoading.value) {
+      _hasLoadedOnce = true;
+      print('🔄 [OmnCases] Loading data once - initialization complete');
+      doctorCaseController.refreshCases();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: Color(0xFFF5F7FA),
-      body: Column(
-        children: [
-          Expanded(
-            child: Obx(() => doctorCaseController.isLoading.value
+      body: Obx(() {
+        // Only load data once when screen first opens
+        _loadDataOnce();
+
+        return doctorCaseController.isLoading.value
         ? Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -39,46 +93,87 @@ class OmnCases extends StatelessWidget {
             ),
           )
         : doctorCaseController.doctorOmeCases.isEmpty
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.folder_open_outlined,
-                      size: 100,
-                      color: Colors.grey[300],
-                    ),
-                    SizedBox(height: 24),
-                    Text(
-                      'لا توجد حالات مكتملة',
-                      style: StringStyle.headerStyle.copyWith(
-                        color: ColorApp.primaryColor,
-                        fontSize: 20,
+            ? RefreshIndicator(
+                onRefresh: () async {
+                  print('🔄 [OmnCases] Pull-to-refresh triggered (empty state)');
+                  if (!doctorCaseController.isLoading.value) {
+                    await doctorCaseController.refreshCases();
+                  } else {
+                    print('⏳ [OmnCases] Already loading, skipping refresh');
+                  }
+                },
+                color: ModernTheme.primaryBlue,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.folder_open_outlined,
+                        size: 100,
+                        color: Colors.grey[300],
                       ),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'حالاتك المكتملة والجارى علاجها ستظهر هنا',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
+                      SizedBox(height: 24),
+                      Text(
+                        'لا توجد حالات مكتملة',
+                        style: StringStyle.headerStyle.copyWith(
+                          color: ColorApp.primaryColor,
+                          fontSize: 20,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'اسحب لأسفل للتحديث',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[500],
+                      SizedBox(height: 12),
+                      Text(
+                        'حالاتك المكتملة والجارى علاجها ستظهر هنا',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: doctorCaseController.isLoading.value
+                            ? null
+                            : () async {
+                                print('🔄 [OmnCases] Refresh button pressed');
+                                await doctorCaseController.refreshCases();
+                              },
+                        icon: doctorCaseController.isLoading.value
+                            ? SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Icon(Icons.refresh, size: 18),
+                        label: Text(
+                          doctorCaseController.isLoading.value ? 'جاري التحديث...' : 'تحديث',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ModernTheme.primaryBlue,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        'اسحب لأسفل للتحديث',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
             : RefreshIndicator(
                 onRefresh: () async {
                   print('🔄 [OmnCases] Pull-to-refresh triggered');
-                  // Use the improved refreshCases method to prevent double loading
                   if (!doctorCaseController.isLoading.value) {
                     await doctorCaseController.refreshCases();
                   } else {
@@ -177,10 +272,8 @@ class OmnCases extends StatelessWidget {
                     ],
                   ],
                 ),
-              )),
-          ),
-        ],
-      ),
+              );
+            }),
     );
   }
 

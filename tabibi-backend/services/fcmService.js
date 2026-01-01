@@ -111,29 +111,45 @@ class FCMService {
         return { success: false, error: 'Firebase not initialized', successCount: 0, failureCount: tokens.length };
       }
 
+      // Create multicast message
       const message = {
         notification: {
           title: title,
           body: body,
         },
         data: data,
-        tokens: tokens,
       };
 
       console.log('📤 Sending FCM notification to', tokens.length, 'devices');
       console.log('📱 Message:', { title, body, data });
 
-      const response = await admin.messaging().sendMulticast(message);
+      // Use sendEachForMulticast instead of sendMulticast (newer API)
+      const response = await admin.messaging().sendEachForMulticast({
+        tokens: tokens,
+        ...message,
+      });
+
       console.log('✅ Successfully sent messages:', response.successCount, 'successes,', response.failureCount, 'failures');
 
       if (response.failureCount > 0) {
         const failedTokens = [];
         response.responses.forEach((resp, idx) => {
           if (!resp.success) {
-            failedTokens.push(tokens[idx]);
+            failedTokens.push({
+              token: tokens[idx],
+              error: resp.error?.message || 'Unknown error'
+            });
           }
         });
-        console.log('List of tokens that caused failures:', failedTokens);
+        if (failedTokens.length > 0) {
+          console.log('⚠️  Failed tokens:', failedTokens.length);
+          // Log specific errors for debugging
+          failedTokens.forEach(ft => {
+            if (ft.error !== 'messaging/registration-token-not-registered') {
+              console.log(`   Token: ${ft.token.substring(0, 10)}... - Error: ${ft.error}`);
+            }
+          });
+        }
       }
 
       return {
@@ -143,7 +159,20 @@ class FCMService {
         messageId: response.responses[0]?.messageId,
       };
     } catch (error) {
-      console.error('❌ Error sending messages:', error);
+      // Better error handling for credential issues
+      if (error.code === 'app/invalid-credential' || error.message?.includes('Invalid JWT Signature')) {
+        console.error('❌ Firebase Credential Error: The service account key is invalid or expired.');
+        console.error('🔧 To fix this issue:');
+        console.error('   1. Check server time: Run `date` command and ensure it\'s accurate');
+        console.error('   2. Regenerate service account key:');
+        console.error('      - Go to: https://console.firebase.google.com/project/tabibi-d938a/settings/serviceaccounts');
+        console.error('      - Click "Generate New Private Key"');
+        console.error('      - Replace the content of tabibi-backend/config/serviceAccountKey.json');
+        console.error('   3. Restart the backend server after replacing the key file');
+      } else {
+        console.error('❌ Error sending FCM messages:', error.message);
+      }
+
       return { success: false, error: error.message };
     }
   }

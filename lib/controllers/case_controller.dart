@@ -564,9 +564,6 @@ class CaseController extends GetxController {
       }
       final formData = dio.FormData.fromMap(dataMap);
 
-      print(formData.fields);
-      print(formData.files);
-
       // ✅ إرسال الطلب - Use edit endpoint if reapplying, otherwise new
       final StateReturnData data;
       if (reapplyingCaseId != null) {
@@ -579,7 +576,6 @@ class CaseController extends GetxController {
         print('Creating new case');
       }
 
-      isLoading(true);
       //
       //   dio.FormData formData = dio.FormData.fromMap(data
       //       //   {
@@ -602,11 +598,11 @@ class CaseController extends GetxController {
       if (data.isStateSucess <= 2) {
         ProfileController profileController = Get.find<ProfileController>();
         await profileController.fetchDataProfile();
-        
-        String successMessage = reapplyingCaseId != null 
-            ? 'تم إعادة تقديم الحالة بنجاح' 
+
+        String successMessage = reapplyingCaseId != null
+            ? 'تم إعادة تقديم الحالة بنجاح'
             : 'تم اضافة الحالة';
-        
+
         clearFeilds();
         MessageSnak.message(successMessage, color: ColorApp.greenColor);
         // Navigate to home and switch to Apply Case tab
@@ -616,12 +612,20 @@ class CaseController extends GetxController {
         // This will show the current case details on the Apply Case screen
         homeController.changeIndex(1);
       } else {
-        // MessageSnak.message('حصل خطا', color: ColorApp.greenColor);
-        // print(data.data);
-        MessageSnak.message('تم رفع حالة مسبقا وما زال العمل عليها');
+        // Parse error message from backend
+        String errorMessage = 'حصل خطأ';
+        if (data.data != null) {
+          if (data.data is Map && data.data.containsKey('error')) {
+            errorMessage = data.data['error'] ?? 'حصل خطأ';
+          } else if (data.data is Map && data.data.containsKey('message')) {
+            errorMessage = data.data['message'] ?? 'حصل خطأ';
+          }
+        }
+        MessageSnak.message(errorMessage);
       }
     } catch (e) {
-      MessageSnak.message('تأكد من الاتصال ');
+      print('Error in submitSendInfo: $e');
+      MessageSnak.message('تأكد من الاتصال بالإنترنت');
     } finally {
       await Future.delayed(Duration(seconds: 1));
       isLoading(false);

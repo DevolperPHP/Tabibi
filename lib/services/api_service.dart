@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:dio/dio.dart' as dio;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -6,8 +6,8 @@ import '../controllers/storage_controller.dart';
 import '../utils/constants/api_constants.dart';
 
 class ApiService {
-  static final Dio _dio = Dio(
-    BaseOptions(
+  static final dio.Dio _dio = dio.Dio(
+    dio.BaseOptions(
       baseUrl: ApiConstants.baseUrl,
       validateStatus: (status) {
         return status! < 500; // Adjust based on your needs
@@ -116,7 +116,7 @@ class ApiService {
       // return StateReturnData(2, response.data as Map<String, dynamic>);
       return StateReturnData(2, response.data);
     } catch (e) {
-      if (e is DioException) {
+      if (e is dio.DioException) {
         // Check for 401 Unauthorized
         if (e.response?.statusCode == 401) {
           _handleUnauthorized();
@@ -135,9 +135,8 @@ class ApiService {
   // دالة POST لإرسال البيانات وإرجاع النتيجة كـ Map
   static Future<StateReturnData> postData(String endpoint, dynamic data) async {
     try {
-      // Ensure data is properly formatted for JSON
-      final jsonData = data is Map ? data : {'data': data};
-      final response = await _dio.post(endpoint, data: jsonData);
+      // Don't convert FormData - pass it directly to Dio
+      final response = await _dio.post(endpoint, data: data);
       print(response.data);
       print('State Code : ${response.statusCode}');
 
@@ -159,7 +158,7 @@ class ApiService {
       }
       return StateReturnData(3, response.data);
     } catch (e) {
-      if (e is DioException) {
+      if (e is dio.DioException) {
         // Check for 401 Unauthorized
         if (e.response?.statusCode == 401) {
           _handleUnauthorized();
@@ -209,7 +208,7 @@ class ApiService {
       }
       return StateReturnData(2, response.data);
     } catch (e) {
-      if (e is DioException) {
+      if (e is dio.DioException) {
         // Check for 401 Unauthorized
         if (e.response?.statusCode == 401) {
           _handleUnauthorized();
@@ -248,7 +247,7 @@ class ApiService {
       }
       return StateReturnData(2, response.data);
     } catch (e) {
-      if (e is DioException) {
+      if (e is dio.DioException) {
         // Check for 401 Unauthorized
         if (e.response?.statusCode == 401) {
           _handleUnauthorized();

@@ -25,6 +25,10 @@ late Future<void> _initializationFuture;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize GetSecureStorage FIRST, before any storage operations
+  // IMPORTANT: Password is required for encryption. Must match across app restarts.
+  await GetSecureStorage.init(password: Values.passwordStorage);
+
   // Initialize Firebase only for mobile platforms
   try {
     // Only initialize Firebase on Android and iOS
